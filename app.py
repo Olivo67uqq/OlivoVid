@@ -34,7 +34,7 @@ def strona_glowna():
         </style>
     </head>
     <body>
-        <h1>🎵 Mini-TikTok</h1>
+        <h1>🎵 OlivoVid</h1>
         <form method="POST" action="/upload" enctype="multipart/form-data">
             <input type="file" name="wideo" accept="video/*"><br>
             <button type="submit">⬆️ Wgraj wideo</button>
@@ -65,4 +65,5 @@ def wideo(nazwa):
     return send_from_directory(UPLOAD_FOLDER, nazwa)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
