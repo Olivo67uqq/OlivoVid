@@ -1,16 +1,26 @@
 from flask import Flask, request, send_from_directory, redirect, url_for, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from PIL import Image
+from dotenv import load_dotenv
+import cloudinary
+import cloudinary.uploader
 import os
 import sqlite3
-import io
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "olivovid_secret_123"
-UPLOAD_FOLDER = 'uploads'
 AVATAR_FOLDER = 'avatars'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(AVATAR_FOLDER, exist_ok=True)
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
+
+LIMIT_FILMOW_MIESIECZNIE = 5
 
 def get_db():
     conn = sqlite3.connect('baza.db')
@@ -22,9 +32,9 @@ def init_db():
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS uzytkownicy
                  (id INTEGER PRIMARY KEY, nazwa TEXT UNIQUE, haslo TEXT,
-                  bio TEXT DEFAULT '', avatar TEXT DEFAULT '')''')
+                  bio TEXT DEFAULT '', avatar TEXT DEFAULT '', is_admin INTEGER DEFAULT 0)''')
     c.execute('''CREATE TABLE IF NOT EXISTS filmy
-                 (id INTEGER PRIMARY KEY, nazwa_pliku TEXT, tytul TEXT,
+                 (id INTEGER PRIMARY KEY, cloudinary_id TEXT, url TEXT, tytul TEXT,
                   autor TEXT, data TEXT DEFAULT CURRENT_TIMESTAMP)''')
     c.execute('''CREATE TABLE IF NOT EXISTS lajki
                  (id INTEGER PRIMARY KEY, film_id INTEGER, uzytkownik TEXT,
@@ -36,21 +46,45 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS lajki_komentarzy
                  (id INTEGER PRIMARY KEY, komentarz_id INTEGER, uzytkownik TEXT,
                   UNIQUE(komentarz_id, uzytkownik))''')
+    c.execute('''CREATE TABLE IF NOT EXISTS ustawienia
+                 (klucz TEXT PRIMARY KEY, wartosc TEXT)''')
     conn.commit()
-    # Dodaj kolumny bio i avatar jeśli nie istnieją
-    try:
-        conn.execute("ALTER TABLE uzytkownicy ADD COLUMN bio TEXT DEFAULT ''")
-        conn.commit()
-    except:
-        pass
-    try:
-        conn.execute("ALTER TABLE uzytkownicy ADD COLUMN avatar TEXT DEFAULT ''")
-        conn.commit()
-    except:
-        pass
+    # Dodaj kolumny jeśli nie istnieją
+    for col in [("bio", "TEXT DEFAULT ''"), ("avatar", "TEXT DEFAULT ''"), ("is_admin", "INTEGER DEFAULT 0")]:
+        try:
+            conn.execute(f"ALTER TABLE uzytkownicy ADD COLUMN {col[0]} {col[1]}")
+            conn.commit()
+        except: pass
+    # Domyślne ustawienia
+    conn.execute("INSERT OR IGNORE INTO ustawienia VALUES ('wgrywanie_aktywne', '1')")
+    conn.commit()
     conn.close()
 
 init_db()
+
+def is_admin():
+    if 'uzytkownik' not in session:
+        return False
+    conn = get_db()
+    user = conn.execute("SELECT is_admin FROM uzytkownicy WHERE nazwa=?", (session['uzytkownik'],)).fetchone()
+    conn.close()
+    return user and user['is_admin'] == 1
+
+def filmy_w_tym_miesiacu(uzytkownik):
+    conn = get_db()
+    from datetime import datetime
+    miesiac = datetime.now().strftime('%Y-%m')
+    count = conn.execute(
+        "SELECT COUNT(*) as c FROM filmy WHERE autor=? AND data LIKE ?",
+        (uzytkownik, f"{miesiac}%")).fetchone()['c']
+    conn.close()
+    return count
+
+def wgrywanie_aktywne():
+    conn = get_db()
+    val = conn.execute("SELECT wartosc FROM ustawienia WHERE klucz='wgrywanie_aktywne'").fetchone()
+    conn.close()
+    return val and val['wartosc'] == '1'
 
 STYLE = '''
 <style>
@@ -62,7 +96,7 @@ STYLE = '''
     .nav-right { display: flex; align-items: center; gap: 16px; }
     .nav-user { color: #aaa; font-size: 14px; }
     .nav-user b { color: white; }
-    .nav-link { color: #fe2c55; text-decoration: none; font-size: 14px; font-weight: 600; }
+    .nav-link { color: #fe2c55; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
     .upload-box { background: #111; border: 2px dashed #333; border-radius: 16px; padding: 24px; max-width: 600px; margin: 24px auto; text-align: center; }
     .upload-box input[type=text] { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 10px; font-size: 15px; margin-bottom: 10px; outline: none; }
     .upload-box input[type=text]:focus { border-color: #fe2c55; }
@@ -70,15 +104,17 @@ STYLE = '''
     .file-label { display: inline-block; background: #222; color: #aaa; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 8px; border: 1px solid #333; }
     .upload-btn { background: #fe2c55; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
     .upload-btn:hover { background: #d4244a; }
+    .upload-btn:disabled { background: #555; cursor: not-allowed; }
+    .limit-info { color: #888; font-size: 13px; margin-top: 8px; }
+    .limit-warn { color: #fe2c55; font-size: 13px; margin-top: 8px; }
     .video-grid { max-width: 600px; margin: 0 auto; padding: 0 16px 40px; }
     .video-card { display: flex; gap: 12px; margin: 24px 0; align-items: flex-end; }
     .video-main { flex: 1; background: #111; border-radius: 16px; overflow: hidden; }
     .video-main video { width: 100%; display: block; }
     .video-info { padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
     .video-author-link { color: #fe2c55; text-decoration: none; font-size: 14px; font-weight: 700; }
-    .video-author-link:hover { text-decoration: underline; }
     .video-title { font-size: 14px; color: #ddd; margin-top: 2px; }
-    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #333; border: 2px solid #fe2c55; }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fe2c55; }
     .avatar-sm-placeholder { width: 32px; height: 32px; border-radius: 50%; background: #333; border: 2px solid #fe2c55; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fe2c55; flex-shrink: 0; }
     .video-actions { display: flex; flex-direction: column; align-items: center; gap: 20px; padding-bottom: 8px; min-width: 52px; }
     .action-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; background: none; border: none; color: white; }
@@ -91,23 +127,19 @@ STYLE = '''
     .comment { background: #1a1a1a; border-radius: 10px; padding: 10px 14px; margin: 8px 0; }
     .comment.reply { margin-left: 20px; background: #161616; border-left: 2px solid #333; }
     .comment-author { font-size: 13px; font-weight: 700; color: #fe2c55; text-decoration: none; }
-    .comment-author:hover { text-decoration: underline; }
     .comment-text { font-size: 14px; color: #ddd; margin: 4px 0; }
     .comment-actions { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
     .comment-like-btn { display: flex; align-items: center; gap: 4px; background: none; border: none; color: #666; font-size: 12px; cursor: pointer; }
     .comment-like-btn:hover { color: #fe2c55; }
     .comment-like-btn.liked { color: #fe2c55; }
     .reply-toggle { background: none; border: none; color: #666; font-size: 12px; cursor: pointer; }
-    .reply-toggle:hover { color: #aaa; }
     .comment-form { display: flex; gap: 8px; margin-top: 14px; }
     .comment-form input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; }
-    .comment-form input:focus { border-color: #fe2c55; }
     .comment-form button { background: #fe2c55; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 700; }
     .reply-form { display: none; margin-top: 8px; }
     .reply-form.active { display: flex; gap: 8px; }
     .reply-form input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none; }
     .reply-form button { background: #333; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
-    /* Profile */
     .profile-header { max-width: 600px; margin: 30px auto; padding: 0 16px; }
     .profile-top { display: flex; align-items: center; gap: 24px; margin-bottom: 20px; }
     .avatar-lg { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #fe2c55; }
@@ -119,17 +151,19 @@ STYLE = '''
     .stat-num { font-size: 18px; font-weight: 700; }
     .stat-label { font-size: 12px; color: #aaa; }
     .edit-btn { background: #222; color: white; border: 1px solid #333; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 12px; }
-    .edit-btn:hover { background: #2a2a2a; }
     .profile-videos { max-width: 600px; margin: 0 auto; padding: 0 16px 40px; }
     .profile-videos h3 { font-size: 16px; color: #aaa; margin-bottom: 16px; border-bottom: 1px solid #222; padding-bottom: 10px; }
-    /* Edit profile */
-    .edit-form { max-width: 500px; margin: 30px auto; padding: 0 16px; background: #111; border-radius: 16px; padding: 30px; }
-    .edit-form input[type=text], .edit-form textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 10px; font-size: 15px; margin: 6px 0 14px; outline: none; }
-    .edit-form textarea { height: 100px; resize: none; }
-    .edit-form input:focus, .edit-form textarea:focus { border-color: #fe2c55; }
-    .edit-form label { color: #aaa; font-size: 13px; }
-    .save-btn { background: #fe2c55; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
-    /* Auth */
+    .delete-btn { background: #333; color: #fe2c55; border: 1px solid #fe2c55; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 8px; }
+    .delete-btn:hover { background: #fe2c5522; }
+    .admin-panel { max-width: 600px; margin: 30px auto; padding: 0 16px; }
+    .admin-panel h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+    .admin-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .admin-card h3 { font-size: 16px; margin-bottom: 12px; color: #aaa; }
+    .toggle-btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; }
+    .toggle-on { background: #fe2c55; color: white; }
+    .toggle-off { background: #333; color: #aaa; }
+    .film-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222; }
+    .film-row:last-child { border-bottom: none; }
     .center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
     .card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 40px; width: 100%; max-width: 380px; }
     .card input { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 10px; font-size: 15px; margin: 6px 0; outline: none; }
@@ -140,6 +174,11 @@ STYLE = '''
     .error { color: #fe2c55; font-size: 14px; margin: 8px 0; text-align: center; }
     h2 { color: white; font-size: 22px; font-weight: 700; margin: 12px 0 20px; text-align: center; }
     p.sub { color: #888; font-size: 14px; margin-top: 20px; text-align: center; }
+    .edit-form { max-width: 500px; margin: 30px auto; padding: 30px; background: #111; border-radius: 16px; }
+    .edit-form input[type=text], .edit-form textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 10px; font-size: 15px; margin: 6px 0 14px; outline: none; }
+    .edit-form textarea { height: 100px; resize: none; }
+    .edit-form label { color: #aaa; font-size: 13px; }
+    .save-btn { background: #fe2c55; color: white; border: none; padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
 </style>
 '''
 
@@ -158,15 +197,16 @@ def avatar_html(nazwa, size="sm"):
     path = os.path.join(AVATAR_FOLDER, f"{nazwa}.jpg")
     if os.path.exists(path):
         return f'<img src="/avatar/{nazwa}" class="avatar-{size}" alt="{nazwa}">'
-    else:
-        return f'<div class="avatar-{size}-placeholder">{nazwa[0].upper()}</div>'
+    return f'<div class="avatar-{size}-placeholder">{nazwa[0].upper()}</div>'
 
 def nav_html(uzytkownik):
+    admin_link = '<a href="/admin" class="nav-link">⚙️ Admin</a>' if is_admin() else ''
     return f'''
     <div class="nav">
         <a href="/" style="text-decoration:none;" class="logo">Olivo<span>Vid</span></a>
         <div class="nav-right">
-            <a href="/profil/{uzytkownik}" class="nav-link">{avatar_html(uzytkownik, "sm")} &nbsp;{uzytkownik}</a>
+            {admin_link}
+            <a href="/profil/{uzytkownik}" class="nav-link">{avatar_html(uzytkownik, "sm")} {uzytkownik}</a>
             <a href="/wyloguj" class="nav-link">Wyloguj</a>
         </div>
     </div>'''
@@ -177,11 +217,13 @@ def strona_glowna():
         return redirect(url_for('logowanie'))
     conn = get_db()
     filmy = conn.execute("SELECT * FROM filmy ORDER BY data DESC").fetchall()
+    uzytkownik = session['uzytkownik']
+    filmy_w_miesiacu = filmy_w_tym_miesiacu(uzytkownik)
     filmy_html = ""
     for film in filmy:
         lajki = conn.execute("SELECT COUNT(*) as c FROM lajki WHERE film_id=?", (film['id'],)).fetchone()['c']
         czy_lajk = conn.execute("SELECT 1 FROM lajki WHERE film_id=? AND uzytkownik=?",
-                                (film['id'], session['uzytkownik'])).fetchone()
+                                (film['id'], uzytkownik)).fetchone()
         ile_kom = conn.execute("SELECT COUNT(*) as c FROM komentarze WHERE film_id=?", (film['id'],)).fetchone()['c']
         komentarze = conn.execute(
             "SELECT * FROM komentarze WHERE film_id=? AND odpowiedz_na IS NULL ORDER BY data ASC",
@@ -190,13 +232,13 @@ def strona_glowna():
         for kom in komentarze:
             lk = conn.execute("SELECT COUNT(*) as c FROM lajki_komentarzy WHERE komentarz_id=?", (kom['id'],)).fetchone()['c']
             czy_lk = conn.execute("SELECT 1 FROM lajki_komentarzy WHERE komentarz_id=? AND uzytkownik=?",
-                                  (kom['id'], session['uzytkownik'])).fetchone()
+                                  (kom['id'], uzytkownik)).fetchone()
             odpowiedzi = conn.execute("SELECT * FROM komentarze WHERE odpowiedz_na=? ORDER BY data ASC", (kom['id'],)).fetchall()
             odp_html = ""
             for odp in odpowiedzi:
                 lok = conn.execute("SELECT COUNT(*) as c FROM lajki_komentarzy WHERE komentarz_id=?", (odp['id'],)).fetchone()['c']
                 czy_lok = conn.execute("SELECT 1 FROM lajki_komentarzy WHERE komentarz_id=? AND uzytkownik=?",
-                                       (odp['id'], session['uzytkownik'])).fetchone()
+                                       (odp['id'], uzytkownik)).fetchone()
                 odp_html += f'''
                 <div class="comment reply">
                     <a href="/profil/{odp['uzytkownik']}" class="comment-author">@{odp['uzytkownik']}</a>
@@ -228,7 +270,7 @@ def strona_glowna():
         filmy_html += f'''
         <div class="video-card">
             <div class="video-main">
-                <video controls><source src="/wideo/{film['nazwa_pliku']}"></video>
+                <video controls><source src="{film['url']}"></video>
                 <div class="video-info">
                     <a href="/profil/{film['autor']}">{avatar_html(film['autor'], 'sm')}</a>
                     <div>
@@ -256,23 +298,37 @@ def strona_glowna():
             </div>
         </div>'''
     conn.close()
-    return f'''<!DOCTYPE html>
-    <html>
-    <head><title>OlivoVid</title>{STYLE}</head>
-    <body>
-        {nav_html(session['uzytkownik'])}
+    aktywne = wgrywanie_aktywne()
+    if not aktywne:
+        upload_html = '<div class="upload-box"><p class="limit-warn">⛔ Wgrywanie filmów jest tymczasowo wyłączone.</p></div>'
+    elif filmy_w_miesiacu >= LIMIT_FILMOW_MIESIECZNIE:
+        upload_html = f'<div class="upload-box"><p class="limit-warn">⛔ Osiągnąłeś limit {LIMIT_FILMOW_MIESIECZNIE} filmów w tym miesiącu.</p></div>'
+    else:
+        pozostalo = LIMIT_FILMOW_MIESIECZNIE - filmy_w_miesiacu
+        upload_html = f'''
         <div class="upload-box">
-            <form method="POST" action="/upload" enctype="multipart/form-data">
+            <form method="POST" action="/upload" enctype="multipart/form-data" id="uploadForm">
                 <input type="text" name="tytul" placeholder="Tytuł wideo" required>
                 <label for="fileInput" class="file-label">📁 Wybierz wideo</label>
                 <input type="file" name="wideo" accept="video/*" class="file-input" id="fileInput"
                        onchange="document.getElementById('fileName').textContent = this.files[0].name">
                 <p style="color:#666; font-size:13px; margin:4px 0;" id="fileName">Nie wybrano pliku</p>
-                <button type="submit" class="upload-btn">⬆️ Wgraj wideo</button>
+                <button type="submit" class="upload-btn" id="uploadBtn">⬆️ Wgraj wideo</button>
+                <p class="limit-info">Pozostało filmów w tym miesiącu: <b>{pozostalo}</b> / {LIMIT_FILMOW_MIESIECZNIE}</p>
             </form>
-        </div>
+        </div>'''
+    return f'''<!DOCTYPE html>
+    <html>
+    <head><title>OlivoVid</title>{STYLE}</head>
+    <body>
+        {nav_html(uzytkownik)}
+        {upload_html}
         <div class="video-grid">{filmy_html}</div>
         <script>
+        document.getElementById && document.getElementById('uploadForm') && document.getElementById('uploadForm').addEventListener('submit', function() {{
+            const btn = document.getElementById('uploadBtn');
+            if(btn) {{ btn.disabled = true; btn.textContent = '⏳ Wgrywanie...'; }}
+        }});
         function lajkuj(filmId, btn) {{
             fetch('/lajkuj/' + filmId, {{method: 'POST'}})
             .then(r => r.json())
@@ -356,6 +412,117 @@ def strona_glowna():
     </body>
     </html>'''
 
+@app.route("/upload", methods=["POST"])
+def upload():
+    if 'uzytkownik' not in session:
+        return redirect(url_for('logowanie'))
+    if not wgrywanie_aktywne():
+        return redirect(url_for('strona_glowna'))
+    if filmy_w_tym_miesiacu(session['uzytkownik']) >= LIMIT_FILMOW_MIESIECZNIE:
+        return redirect(url_for('strona_glowna'))
+    plik = request.files["wideo"]
+    tytul = request.form["tytul"]
+    # Sprawdź rozmiar (max 50MB)
+    plik.seek(0, 2)
+    rozmiar = plik.tell()
+    plik.seek(0)
+    if rozmiar > 50 * 1024 * 1024:
+        return "<h1 style='color:white;text-align:center;padding:40px;'>Plik za duży! Max 50MB.</h1>"
+    wynik = cloudinary.uploader.upload(plik, resource_type="video", folder="olivovid")
+    conn = get_db()
+    conn.execute("INSERT INTO filmy (cloudinary_id, url, tytul, autor) VALUES (?, ?, ?, ?)",
+                 (wynik['public_id'], wynik['secure_url'], tytul, session['uzytkownik']))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('strona_glowna'))
+
+@app.route("/admin")
+def admin():
+    if not is_admin():
+        return redirect(url_for('strona_glowna'))
+    conn = get_db()
+    filmy = conn.execute("SELECT * FROM filmy ORDER BY data DESC").fetchall()
+    uzytkownicy = conn.execute("SELECT nazwa, is_admin FROM uzytkownicy ORDER BY nazwa").fetchall()
+    aktywne = wgrywanie_aktywne()
+    conn.close()
+    filmy_html = ""
+    for film in filmy:
+        filmy_html += f'''
+        <div class="film-row">
+            <div>
+                <p style="font-weight:700;">{film['tytul']}</p>
+                <p style="color:#888; font-size:13px;">@{film['autor']} • {film['data'][:10]}</p>
+            </div>
+            <button class="delete-btn" onclick="usunFilm({film['id']})">🗑️ Usuń</button>
+        </div>'''
+    return f'''<!DOCTYPE html>
+    <html>
+    <head><title>Admin - OlivoVid</title>{STYLE}</head>
+    <body>
+        {nav_html(session['uzytkownik'])}
+        <div class="admin-panel">
+            <h2>⚙️ Panel Admina</h2>
+            <div class="admin-card">
+                <h3>Wgrywanie filmów</h3>
+                <button class="toggle-btn {'toggle-on' if aktywne else 'toggle-off'}"
+                        onclick="toggleWgrywanie()" id="toggleBtn">
+                    {'✅ Włączone' if aktywne else '⛔ Wyłączone'}
+                </button>
+            </div>
+            <div class="admin-card">
+                <h3>Wszystkie filmy ({len(filmy)})</h3>
+                {filmy_html if filmy_html else '<p style="color:#666;">Brak filmów</p>'}
+            </div>
+        </div>
+        <script>
+        function toggleWgrywanie() {{
+            fetch('/admin/toggle_wgrywanie', {{method: 'POST'}})
+            .then(r => r.json())
+            .then(d => {{
+                const btn = document.getElementById('toggleBtn');
+                btn.textContent = d.aktywne ? '✅ Włączone' : '⛔ Wyłączone';
+                btn.className = 'toggle-btn ' + (d.aktywne ? 'toggle-on' : 'toggle-off');
+            }});
+        }}
+        function usunFilm(filmId) {{
+            if (!confirm('Usunąć ten film?')) return;
+            fetch('/admin/usun_film/' + filmId, {{method: 'POST'}})
+            .then(r => r.json())
+            .then(d => {{ if(d.ok) location.reload(); }});
+        }}
+        </script>
+    </body>
+    </html>'''
+
+@app.route("/admin/toggle_wgrywanie", methods=["POST"])
+def toggle_wgrywanie():
+    if not is_admin():
+        return jsonify({}), 403
+    conn = get_db()
+    aktywne = wgrywanie_aktywne()
+    conn.execute("UPDATE ustawienia SET wartosc=? WHERE klucz='wgrywanie_aktywne'",
+                 ('0' if aktywne else '1',))
+    conn.commit()
+    conn.close()
+    return jsonify({'aktywne': not aktywne})
+
+@app.route("/admin/usun_film/<int:film_id>", methods=["POST"])
+def usun_film(film_id):
+    if not is_admin():
+        return jsonify({}), 403
+    conn = get_db()
+    film = conn.execute("SELECT cloudinary_id FROM filmy WHERE id=?", (film_id,)).fetchone()
+    if film and film['cloudinary_id']:
+        try:
+            cloudinary.uploader.destroy(film['cloudinary_id'], resource_type="video")
+        except: pass
+    conn.execute("DELETE FROM filmy WHERE id=?", (film_id,))
+    conn.execute("DELETE FROM lajki WHERE film_id=?", (film_id,))
+    conn.execute("DELETE FROM komentarze WHERE film_id=?", (film_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
+
 @app.route("/profil/<nazwa>")
 def profil(nazwa):
     if 'uzytkownik' not in session:
@@ -363,29 +530,33 @@ def profil(nazwa):
     conn = get_db()
     user = conn.execute("SELECT * FROM uzytkownicy WHERE nazwa=?", (nazwa,)).fetchone()
     if not user:
-        return "<h1 style='color:white;text-align:center;padding:40px;'>Użytkownik nie istnieje</h1>"
+        return f'''<!DOCTYPE html><html><head>{STYLE}</head><body>
+            {nav_html(session['uzytkownik'])}
+            <p style="color:white;text-align:center;padding:40px;">Użytkownik nie istnieje</p>
+        </body></html>'''
     filmy = conn.execute("SELECT * FROM filmy WHERE autor=? ORDER BY data DESC", (nazwa,)).fetchall()
-    ile_filmow = len(filmy)
     ile_lajkow = conn.execute(
         "SELECT COUNT(*) as c FROM lajki WHERE film_id IN (SELECT id FROM filmy WHERE autor=?)",
         (nazwa,)).fetchone()['c']
     conn.close()
+    jest_swoj = session['uzytkownik'] == nazwa
     filmy_html = ""
     for film in filmy:
+        usun_btn = f'<button class="delete-btn" onclick="usunSwojFilm({film["id"]})">🗑️ Usuń</button>' if jest_swoj else ''
         filmy_html += f'''
-        <div class="video-card" style="margin: 16px 0;">
+        <div class="video-card" id="film-{film['id']}">
             <div class="video-main">
-                <video controls><source src="/wideo/{film['nazwa_pliku']}"></video>
+                <video controls><source src="{film['url']}"></video>
                 <div class="video-info">
                     <div>
                         <p class="video-title">{film['tytul']}</p>
+                        {usun_btn}
                     </div>
                 </div>
             </div>
         </div>'''
-    jest_swoj = session['uzytkownik'] == nazwa
-    edit_btn = f'<a href="/edytuj_profil"><button class="edit-btn">✏️ Edytuj profil</button></a>' if jest_swoj else ''
-    bio_text = user['bio'] if user['bio'] else ("Brak opisu" if not jest_swoj else "Dodaj opis w edycji profilu")
+    edit_btn = '<a href="/edytuj_profil"><button class="edit-btn">✏️ Edytuj profil</button></a>' if jest_swoj else ''
+    bio_text = user['bio'] if user['bio'] else "Brak opisu"
     return f'''<!DOCTYPE html>
     <html>
     <head><title>@{nazwa} - OlivoVid</title>{STYLE}</head>
@@ -398,7 +569,7 @@ def profil(nazwa):
                     <p class="profile-name">@{nazwa}</p>
                     <p class="profile-bio">{bio_text}</p>
                     <div class="profile-stats">
-                        <div class="stat"><p class="stat-num">{ile_filmow}</p><p class="stat-label">filmów</p></div>
+                        <div class="stat"><p class="stat-num">{len(filmy)}</p><p class="stat-label">filmów</p></div>
                         <div class="stat"><p class="stat-num">{ile_lajkow}</p><p class="stat-label">lajków</p></div>
                     </div>
                     {edit_btn}
@@ -407,10 +578,39 @@ def profil(nazwa):
         </div>
         <div class="profile-videos">
             <h3>Filmy @{nazwa}</h3>
-            {filmy_html if filmy_html else '<p style="color:#666; text-align:center; padding:20px;">Brak filmów</p>'}
+            {filmy_html if filmy_html else '<p style="color:#666;text-align:center;padding:20px;">Brak filmów</p>'}
         </div>
+        <script>
+        function usunSwojFilm(filmId) {{
+            if (!confirm('Usunąć ten film?')) return;
+            fetch('/usun_film/' + filmId, {{method: 'POST'}})
+            .then(r => r.json())
+            .then(d => {{ if(d.ok) document.getElementById('film-' + filmId).remove(); }});
+        }}
+        </script>
     </body>
     </html>'''
+
+@app.route("/usun_film/<int:film_id>", methods=["POST"])
+def usun_film_uzytkownik(film_id):
+    if 'uzytkownik' not in session:
+        return jsonify({}), 401
+    conn = get_db()
+    film = conn.execute("SELECT * FROM filmy WHERE id=? AND autor=?",
+                        (film_id, session['uzytkownik'])).fetchone()
+    if not film:
+        conn.close()
+        return jsonify({}), 403
+    if film['cloudinary_id']:
+        try:
+            cloudinary.uploader.destroy(film['cloudinary_id'], resource_type="video")
+        except: pass
+    conn.execute("DELETE FROM filmy WHERE id=?", (film_id,))
+    conn.execute("DELETE FROM lajki WHERE film_id=?", (film_id,))
+    conn.execute("DELETE FROM komentarze WHERE film_id=?", (film_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
 
 @app.route("/edytuj_profil", methods=["GET", "POST"])
 def edytuj_profil():
@@ -440,7 +640,7 @@ def edytuj_profil():
             <div class="edit-form">
                 <h2>Edytuj profil</h2>
                 <form method="POST" enctype="multipart/form-data">
-                    <label>Zdjęcie profilowe</label><br>
+                    <label>Zdjęcie profilowe</label><br><br>
                     {avatar_html(session['uzytkownik'], 'lg')}
                     <br><br>
                     <input type="file" name="avatar" accept="image/*" style="color:white; margin-bottom:14px;">
@@ -456,20 +656,6 @@ def edytuj_profil():
 @app.route("/avatar/<nazwa>")
 def avatar(nazwa):
     return send_from_directory(AVATAR_FOLDER, f"{nazwa}.jpg")
-
-@app.route("/upload", methods=["POST"])
-def upload():
-    if 'uzytkownik' not in session:
-        return redirect(url_for('logowanie'))
-    plik = request.files["wideo"]
-    tytul = request.form["tytul"]
-    plik.save(os.path.join(UPLOAD_FOLDER, plik.filename))
-    conn = get_db()
-    conn.execute("INSERT INTO filmy (nazwa_pliku, tytul, autor) VALUES (?, ?, ?)",
-                 (plik.filename, tytul, session['uzytkownik']))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('strona_glowna'))
 
 @app.route("/lajkuj/<int:film_id>", methods=["POST"])
 def lajkuj(film_id):
@@ -603,10 +789,6 @@ def rejestracja():
 def wyloguj():
     session.pop('uzytkownik', None)
     return redirect(url_for('logowanie'))
-
-@app.route("/wideo/<nazwa>")
-def wideo(nazwa):
-    return send_from_directory(UPLOAD_FOLDER, nazwa)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
