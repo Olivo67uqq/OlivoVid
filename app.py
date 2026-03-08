@@ -790,6 +790,16 @@ def wyloguj():
     session.pop('uzytkownik', None)
     return redirect(url_for('logowanie'))
 
+@app.route("/setup_admin/<klucz>/<nazwa>")
+def setup_admin(klucz, nazwa):
+    if klucz != "olivovid_tajny_klucz_2026":
+        return "Błędny klucz", 403
+    conn = get_db()
+    conn.execute("UPDATE uzytkownicy SET is_admin=1 WHERE nazwa=?", (nazwa,))
+    conn.commit()
+    conn.close()
+    return f"Konto {nazwa} jest teraz adminem!"
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
