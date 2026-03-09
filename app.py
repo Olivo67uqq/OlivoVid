@@ -7,6 +7,7 @@ import cloudinary.uploader
 import os
 import sqlite3
 import random
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -14,8 +15,10 @@ app = Flask(__name__)
 app.secret_key = "olivovid_secret_123"
 AVATAR_FOLDER = 'avatars'
 CHAT_FOLDER = 'chat_imgs'
+RELACJE_FOLDER = 'relacje_imgs'
 os.makedirs(AVATAR_FOLDER, exist_ok=True)
 os.makedirs(CHAT_FOLDER, exist_ok=True)
+os.makedirs(RELACJE_FOLDER, exist_ok=True)
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -64,16 +67,20 @@ def init_db():
                   UNIQUE(film_id, uzytkownik))''')
     c.execute('''CREATE TABLE IF NOT EXISTS wiadomosci
                  (id INTEGER PRIMARY KEY, od TEXT, do TEXT, tresc TEXT,
-                  typ TEXT DEFAULT 'tekst',
-                  reakcja TEXT DEFAULT NULL,
+                  typ TEXT DEFAULT 'tekst', reakcja TEXT DEFAULT NULL,
                   przeczytana INTEGER DEFAULT 0,
                   data TEXT DEFAULT CURRENT_TIMESTAMP)''')
     c.execute('''CREATE TABLE IF NOT EXISTS prosby_chat
-                 (id INTEGER PRIMARY KEY, od TEXT, do TEXT,
-                  wiadomosc TEXT,
+                 (id INTEGER PRIMARY KEY, od TEXT, do TEXT, wiadomosc TEXT,
                   status TEXT DEFAULT 'oczekuje',
                   data TEXT DEFAULT CURRENT_TIMESTAMP,
                   UNIQUE(od, do))''')
+    c.execute('''CREATE TABLE IF NOT EXISTS relacje
+                 (id INTEGER PRIMARY KEY, autor TEXT, plik TEXT,
+                  opis TEXT DEFAULT '',
+                  widocznosc TEXT DEFAULT 'wszyscy',
+                  wygasa TEXT,
+                  data TEXT DEFAULT CURRENT_TIMESTAMP)''')
     conn.commit()
     for col in [("bio","TEXT DEFAULT ''"),("avatar","TEXT DEFAULT ''"),("is_admin","INTEGER DEFAULT 0")]:
         try:
@@ -95,7 +102,6 @@ def is_admin():
     return user and user['is_admin'] == 1
 
 def filmy_w_tym_miesiacu(uzytkownik):
-    from datetime import datetime
     conn = get_db()
     miesiac = datetime.now().strftime('%Y-%m')
     count = conn.execute("SELECT COUNT(*) as c FROM filmy WHERE autor=? AND data LIKE ?",
@@ -123,11 +129,9 @@ def ile_wiadomosci(uzytkownik):
     return n + p
 
 def czy_moze_pisac(uzytkownik, do, conn):
-    # Sprawdź czy oboje się obserwują
     obs1 = conn.execute("SELECT 1 FROM obserwowania WHERE obserwujacy=? AND obserwowany=?", (uzytkownik, do)).fetchone()
     obs2 = conn.execute("SELECT 1 FROM obserwowania WHERE obserwujacy=? AND obserwowany=?", (do, uzytkownik)).fetchone()
     wzajemne = obs1 and obs2
-    # Sprawdź czy mają zaakceptowany chat
     zaakceptowany = conn.execute(
         "SELECT 1 FROM prosby_chat WHERE ((od=? AND do=?) OR (od=? AND do=?)) AND status='zaakceptowana'",
         (uzytkownik, do, do, uzytkownik)).fetchone()
@@ -139,24 +143,34 @@ def avatar_html(nazwa, size="sm"):
         return '<img src="/avatar/' + nazwa + '" class="avatar-' + size + '" alt="' + nazwa + '">'
     return '<div class="avatar-' + size + '-placeholder">' + nazwa[0].upper() + '</div>'
 
-def nav_html(uzytkownik):
-    if is_admin():
-        admin_link = '<a href="/admin" class="nav-icon-btn"><svg viewBox="0 0 24 24"><path fill="white" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></a>'
-    else:
-        admin_link = ''
+def bottom_nav_html(aktywna, uzytkownik):
+    m = ile_wiadomosci(uzytkownik)
+    msg_badge = '<span class="bn-badge">' + str(m) + '</span>' if m > 0 else ''
+    ikony = [
+        ('/', 'home', aktywna == 'home', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>', ''),
+        ('/filmy', 'filmy', aktywna == 'filmy', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 6.47L5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4z"/></svg>', ''),
+        ('/dodaj', 'dodaj', aktywna == 'dodaj', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>', 'plus'),
+        ('/wiadomosci', 'wiad', aktywna == 'wiad', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>', msg_badge),
+        ('/profil/' + uzytkownik, 'profil', aktywna == 'profil', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>', ''),
+    ]
+    html = '<div class="bottom-nav">'
+    for href, key, active, icon, badge in ikony:
+        plus_cls = ' bn-plus' if key == 'dodaj' else ''
+        active_cls = ' active' if active else ''
+        html += ('<a href="' + href + '" class="bn-item' + active_cls + plus_cls + '">'
+                 + icon + badge + '</a>')
+    html += '</div>'
+    return html
+
+def top_nav_html(uzytkownik):
     n = ile_powiadomien(uzytkownik)
     notif_badge = '<span class="notif-badge">' + str(n) + '</span>' if n > 0 else ''
-    m = ile_wiadomosci(uzytkownik)
-    msg_badge = '<span class="notif-badge">' + str(m) + '</span>' if m > 0 else ''
+    admin_link = '<a href="/admin" class="nav-icon-btn"><svg viewBox="0 0 24 24"><path fill="white" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></a>' if is_admin() else ''
     return ('''<div class="nav">
         <a href="/" style="text-decoration:none;" class="logo">Olivo<span>Vid</span></a>
         <div class="nav-right">
             <a href="/szukaj" class="nav-icon-btn"><svg viewBox="0 0 24 24"><path fill="white" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></a>
             <a href="/powiadomienia" class="nav-icon-btn" style="position:relative;"><svg viewBox="0 0 24 24"><path fill="white" d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>''' + notif_badge + '''</a>
-            <a href="/upload_page" class="nav-icon-btn"><svg viewBox="0 0 24 24"><path fill="white" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></a>
-            <a href="/wiadomosci" class="nav-icon-btn" style="position:relative;"><svg viewBox="0 0 24 24"><path fill="white" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>''' + msg_badge + '''</a>
-            <a href="/profil/''' + uzytkownik + '''" class="nav-link">''' + avatar_html(uzytkownik, "sm") + ''' <span class="nav-username">''' + uzytkownik + '''</span></a>
-            <a href="/wyloguj" class="nav-icon-btn"><svg viewBox="0 0 24 24"><path fill="white" d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></a>
             ''' + admin_link + '''
         </div>
     </div>''')
@@ -166,28 +180,49 @@ STYLE = '''<style>
     body { background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: white; overflow: hidden; }
     .logo { font-size: 22px; font-weight: 900; color: white; letter-spacing: -1px; }
     .logo span { color: #fe2c55; }
-    .nav { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
+    .nav { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.0)); }
     .nav-right { display: flex; align-items: center; gap: 6px; }
-    .nav-link { color: white; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .nav-username { display: none; }
-    @media(min-width:500px){ .nav-username { display: inline; } }
     .nav-icon-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.1); color: white; text-decoration: none; position: relative; }
     .nav-icon-btn svg { width: 22px; height: 22px; }
-    .nav-icon-btn:active { background: rgba(255,255,255,0.2); }
     .notif-badge { position: absolute; top: 4px; right: 4px; background: #fe2c55; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #000; border-top: 1px solid #222; display: flex; align-items: center; justify-content: space-around; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+    .bn-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; text-decoration: none; width: 48px; height: 48px; border-radius: 50%; position: relative; transition: color 0.15s; }
+    .bn-item svg { width: 26px; height: 26px; }
+    .bn-item.active { color: white; }
+    .bn-item.bn-plus { background: #fe2c55; color: white; width: 48px; height: 48px; border-radius: 14px; }
+    .bn-item.bn-plus svg { width: 28px; height: 28px; }
+    .bn-badge { position: absolute; top: 4px; right: 4px; background: #fe2c55; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fe2c55; }
     .avatar-sm-placeholder { width: 32px; height: 32px; border-radius: 50%; background: #333; border: 2px solid #fe2c55; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fe2c55; flex-shrink: 0; }
+    .avatar-lg { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #fe2c55; }
+    .avatar-lg-placeholder { width: 76px; height: 76px; border-radius: 50%; background: #222; border: 3px solid #fe2c55; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #fe2c55; flex-shrink: 0; }
+    .main-page { height: 100vh; overflow-y: auto; padding-top: 64px; padding-bottom: 68px; }
+    .relacje-row { display: flex; gap: 12px; overflow-x: auto; padding: 12px 16px; scrollbar-width: none; }
+    .relacje-row::-webkit-scrollbar { display: none; }
+    .relacja-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
+    .relacja-ring { width: 64px; height: 64px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #fe2c55, #ff9f43); }
+    .relacja-ring.widziana { background: #333; }
+    .relacja-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+    .relacja-ring-placeholder { width: 100%; height: 100%; border-radius: 50%; background: #222; border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: white; }
+    .relacja-nazwa { font-size: 11px; color: #aaa; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+    .relacja-dodaj { width: 64px; height: 64px; border-radius: 50%; background: #1a1a1a; border: 2px dashed #444; display: flex; align-items: center; justify-content: center; }
+    .relacja-dodaj svg { width: 28px; height: 28px; color: #fe2c55; }
+    .filmy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; padding: 2px; }
+    .film-card { position: relative; aspect-ratio: 9/16; background: #111; overflow: hidden; cursor: pointer; }
+    .film-card video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .film-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 10px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); }
+    .film-card-autor { font-size: 12px; color: #aaa; }
+    .film-card-tytul { font-size: 13px; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
     .feed::-webkit-scrollbar { display: none; }
     .video-slide { height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background: #000; }
     .video-slide video { height: 100vh; width: 100%; object-fit: contain; cursor: pointer; }
     .repost-label { position: absolute; top: 64px; left: 16px; display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; font-size: 12px; color: #aaa; }
-    .repost-label svg { width: 14px; height: 14px; }
     .repost-label a { color: #fe2c55; text-decoration: none; font-weight: 700; }
-    .video-overlay { position: absolute; bottom: 100px; left: 16px; right: 90px; pointer-events: none; }
+    .video-overlay { position: absolute; bottom: 80px; left: 16px; right: 90px; pointer-events: none; }
     .video-overlay-author { font-size: 16px; font-weight: 700; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
     .video-overlay-title { font-size: 14px; color: rgba(255,255,255,0.9); margin-top: 5px; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
-    .video-side-actions { position: absolute; right: 10px; bottom: 100px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .video-side-actions { position: absolute; right: 10px; bottom: 80px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
     .side-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; background: none; border: none; color: white; padding: 4px; }
     .side-count { font-size: 13px; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-weight: 700; }
     .icon-heart { width: 48px; height: 48px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: transform 0.15s; }
@@ -195,14 +230,13 @@ STYLE = '''<style>
     .icon-share { width: 42px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
     .icon-repost { width: 42px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: transform 0.15s; }
     .side-btn:active .icon-heart { transform: scale(1.3); }
-    .side-btn:active .icon-repost { transform: scale(1.2); }
     .pause-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0; transition: opacity 0.2s; pointer-events: none; background: rgba(0,0,0,0.4); border-radius: 50%; padding: 16px; }
     .pause-indicator svg { width: 56px; height: 56px; }
     .pause-indicator.show { opacity: 1; }
     .overlay-avatar { pointer-events: all; }
     .avatar-overlay-sm { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid white; }
     .avatar-overlay-sm-placeholder { width: 44px; height: 44px; border-radius: 50%; background: #333; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: white; }
-    .comments-panel { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 65vh; background: #111; border-radius: 20px 20px 0 0; z-index: 200; padding: 16px 16px 0; }
+    .comments-panel { display: none; position: fixed; bottom: 60px; left: 0; right: 0; height: 60vh; background: #111; border-radius: 20px 20px 0 0; z-index: 200; padding: 16px 16px 0; }
     .comments-panel.open { display: flex; flex-direction: column; }
     .panel-handle { width: 44px; height: 5px; background: #444; border-radius: 3px; margin: 0 auto 14px; flex-shrink: 0; }
     .panel-title { font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 14px; flex-shrink: 0; }
@@ -223,13 +257,21 @@ STYLE = '''<style>
     .reply-form.active { display: flex; gap: 8px; }
     .reply-form input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 10px 14px; border-radius: 20px; font-size: 13px; outline: none; }
     .reply-form button { background: #333; color: white; border: none; padding: 10px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; }
-    .share-panel { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #111; border-radius: 20px 20px 0 0; z-index: 200; padding: 16px; }
+    .share-panel { display: none; position: fixed; bottom: 60px; left: 0; right: 0; background: #111; border-radius: 20px 20px 0 0; z-index: 200; padding: 16px; }
     .share-panel.open { display: block; }
     .share-link { background: #222; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #aaa; word-break: break-all; margin-bottom: 12px; }
     .share-copy-btn { width: 100%; background: #fe2c55; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .overlay-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; }
     .overlay-backdrop.open { display: block; }
-    .search-page { height: 100vh; overflow-y: auto; padding-top: 70px; }
+    .relacja-viewer { display: none; position: fixed; inset: 0; background: #000; z-index: 500; flex-direction: column; }
+    .relacja-viewer.open { display: flex; }
+    .relacja-viewer-img { flex: 1; object-fit: contain; width: 100%; }
+    .relacja-viewer-header { position: absolute; top: 0; left: 0; right: 0; padding: 50px 16px 16px; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); display: flex; align-items: center; gap: 12px; z-index: 10; }
+    .relacja-viewer-opis { position: absolute; bottom: 80px; left: 16px; right: 16px; font-size: 15px; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+    .relacja-viewer-close { position: absolute; top: 50px; right: 16px; background: rgba(0,0,0,0.5); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 11; }
+    .relacja-progress { position: absolute; top: 44px; left: 8px; right: 8px; height: 2px; background: rgba(255,255,255,0.3); border-radius: 2px; z-index: 11; }
+    .relacja-progress-fill { height: 100%; background: white; border-radius: 2px; transition: width linear; }
+    .search-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .search-box { max-width: 600px; margin: 20px auto; padding: 0 16px; }
     .search-input-wrap { display: flex; gap: 10px; }
     .search-input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 14px 18px; border-radius: 24px; font-size: 15px; outline: none; }
@@ -245,11 +287,9 @@ STYLE = '''<style>
     .video-thumb { width: 50px; height: 50px; border-radius: 8px; background: #222; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .video-row-title { font-size: 14px; font-weight: 700; }
     .video-row-author { font-size: 13px; color: #888; margin-top: 2px; }
-    .profile-page { height: 100vh; overflow-y: auto; padding-top: 70px; }
+    .profile-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .profile-header { max-width: 600px; margin: 16px auto; padding: 0 16px; }
     .profile-top { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; }
-    .avatar-lg { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #fe2c55; }
-    .avatar-lg-placeholder { width: 76px; height: 76px; border-radius: 50%; background: #222; border: 3px solid #fe2c55; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #fe2c55; flex-shrink: 0; }
     .profile-name { font-size: 20px; font-weight: 700; }
     .profile-bio { color: #aaa; font-size: 13px; margin-top: 5px; line-height: 1.4; }
     .profile-stats { display: flex; gap: 20px; margin-top: 10px; }
@@ -271,15 +311,20 @@ STYLE = '''<style>
     .grid-delete { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); border: none; color: #fe2c55; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .grid-delete svg { width: 16px; height: 16px; }
     .repost-badge { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); border-radius: 10px; padding: 3px 7px; font-size: 10px; color: #fe2c55; font-weight: 700; }
-    .upload-page { height: 100vh; overflow-y: auto; padding-top: 70px; }
+    .upload-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .upload-box { background: #111; border: 2px dashed #333; border-radius: 16px; padding: 24px; max-width: 500px; margin: 24px auto; text-align: center; }
-    .upload-box input[type=text] { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-bottom: 12px; outline: none; }
+    .upload-box input[type=text], .upload-box textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-bottom: 12px; outline: none; }
+    .upload-box textarea { height: 80px; resize: none; }
     .file-input { display: none; }
     .file-label { display: inline-flex; align-items: center; gap: 8px; background: #222; color: #aaa; padding: 12px 22px; border-radius: 12px; cursor: pointer; font-size: 14px; margin-bottom: 8px; border: 1px solid #333; }
     .upload-btn { background: #fe2c55; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; width: 100%; }
     .upload-btn:disabled { background: #555; cursor: not-allowed; }
     .limit-info { color: #888; font-size: 13px; margin-top: 10px; }
     .limit-warn { color: #fe2c55; font-size: 14px; }
+    .select-style { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-bottom: 12px; outline: none; appearance: none; }
+    .tabs-dodaj { display: flex; gap: 0; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+    .tab-dodaj { flex: 1; padding: 12px; text-align: center; background: #1a1a1a; color: #666; cursor: pointer; font-size: 14px; font-weight: 600; border: none; }
+    .tab-dodaj.active { background: #fe2c55; color: white; }
     .center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; overflow-y: auto; }
     .card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 36px; width: 100%; max-width: 380px; }
     .card input { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin: 6px 0; outline: none; }
@@ -295,14 +340,14 @@ STYLE = '''<style>
     .edit-form textarea { height: 100px; resize: none; }
     .edit-form label { color: #aaa; font-size: 13px; }
     .save-btn { background: #fe2c55; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
-    .notif-page { height: 100vh; overflow-y: auto; padding-top: 70px; }
+    .notif-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .notif-list { max-width: 600px; margin: 20px auto; padding: 0 16px 40px; }
     .notif-item { background: #111; border-radius: 12px; padding: 14px 16px; margin: 10px 0; display: flex; align-items: center; gap: 12px; }
     .notif-item.unread { border-left: 3px solid #fe2c55; }
     .notif-text { font-size: 14px; color: #ddd; line-height: 1.4; }
     .notif-text b { color: #fe2c55; }
     .notif-time { font-size: 12px; color: #555; margin-top: 4px; }
-    .admin-page { height: 100vh; overflow-y: auto; padding-top: 70px; }
+    .admin-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .admin-panel { max-width: 600px; margin: 20px auto; padding: 0 16px 40px; }
     .admin-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
     .admin-card h3 { font-size: 16px; margin-bottom: 12px; color: #aaa; }
@@ -312,7 +357,7 @@ STYLE = '''<style>
     .film-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; }
     .film-row:last-child { border-bottom: none; }
     .delete-btn { background: #1a1a1a; color: #fe2c55; border: 1px solid #fe2c55; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-    .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(50,50,50,0.95); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(50,50,50,0.95); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
     .toast.show { opacity: 1; }
     .empty { text-align: center; padding: 60px 20px; color: #444; font-size: 18px; line-height: 1.6; }
     .typing-dots { display:flex; gap:4px; align-items:center; height:16px; }
@@ -320,7 +365,7 @@ STYLE = '''<style>
     .typing-dots span:nth-child(2) { animation-delay:0.2s; }
     .typing-dots span:nth-child(3) { animation-delay:0.4s; }
     @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-    .chat-page { height: 100vh; overflow-y: auto; padding-top: 70px; }
+    .chat-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .chat-list { max-width: 600px; margin: 0 auto; padding: 16px 16px 40px; }
     .chat-row { display: flex; align-items: center; gap: 14px; background: #111; border-radius: 14px; padding: 14px 16px; margin: 8px 0; text-decoration: none; color: white; position: relative; }
     .chat-row.unread { border-left: 3px solid #fe2c55; }
@@ -329,33 +374,32 @@ STYLE = '''<style>
     .chat-row-preview { font-size: 13px; color: #666; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .chat-row-preview.unread-text { color: #aaa; font-weight: 600; }
     .chat-row-time { font-size: 11px; color: #555; position: absolute; top: 14px; right: 16px; }
-    .chat-new-btn { display: flex; align-items: center; gap: 8px; background: #fe2c55; color: white; border: none; padding: 14px 22px; border-radius: 24px; font-size: 15px; font-weight: 700; cursor: pointer; margin: 0 auto 16px; text-decoration: none; }
     .prosba-card { background: #111; border: 1px solid #333; border-radius: 14px; padding: 16px; margin: 10px 0; }
     .prosba-msg { font-size: 14px; color: #ddd; margin: 10px 0; padding: 10px 14px; background: #1a1a1a; border-radius: 10px; }
     .prosba-btns { display: flex; gap: 10px; margin-top: 12px; }
     .akceptuj-btn { background: #fe2c55; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; flex: 1; }
     .odrzuc-btn { background: #333; color: #aaa; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; flex: 1; }
     .conv-page { height: 100vh; display: flex; flex-direction: column; }
-    .conv-header { padding: 12px 16px; background: #111; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #222; padding-top: 60px; flex-shrink: 0; }
+    .conv-header { padding: 12px 16px; background: #111; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #222; padding-top: 56px; flex-shrink: 0; }
     .conv-header-name { font-size: 16px; font-weight: 700; }
     .conv-back { color: white; text-decoration: none; display: flex; align-items: center; }
     .conv-back svg { width: 24px; height: 24px; }
     .conv-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-    .msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; position: relative; word-break: break-word; }
+    .msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; position: relative; word-break: break-word; margin-bottom: 8px; }
     .msg-bubble.sent { background: #fe2c55; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
     .msg-bubble.received { background: #222; color: white; align-self: flex-start; border-bottom-left-radius: 4px; }
     .msg-bubble img { max-width: 200px; border-radius: 12px; display: block; }
     .msg-time { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: right; }
-    .msg-reakcja { position: absolute; bottom: -10px; right: 8px; font-size: 16px; background: #111; border-radius: 10px; padding: 1px 4px; cursor: pointer; }
+    .msg-reakcja { position: absolute; bottom: -12px; right: 8px; font-size: 16px; background: #111; border-radius: 10px; padding: 2px 6px; cursor: pointer; border: 1px solid #333; }
     .msg-reakcja.left { right: auto; left: 8px; }
-    .conv-input-bar { padding: 10px 12px; background: #111; border-top: 1px solid #222; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .conv-input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 24px; font-size: 14px; outline: none; }
+    .conv-input-bar { padding: 10px 12px; background: #111; border-top: 1px solid #222; display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+    .conv-input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 24px; font-size: 14px; outline: none; min-width: 0; }
     .conv-input:focus { border-color: #fe2c55; }
     .conv-send-btn { background: #fe2c55; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .conv-send-btn svg { width: 20px; height: 20px; }
     .conv-img-btn { background: #222; border: 1px solid #333; color: white; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .conv-img-btn svg { width: 20px; height: 20px; }
-    .reakcja-picker { display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #222; border-radius: 24px; padding: 10px 16px; z-index: 300; gap: 12px; }
+    .reakcja-picker { display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #222; border-radius: 24px; padding: 10px 16px; z-index: 300; gap: 12px; border: 1px solid #333; }
     .reakcja-picker.open { display: flex; }
     .reakcja-opt { font-size: 24px; cursor: pointer; padding: 4px; }
     .prosba-send-box { background: #111; border-radius: 16px; padding: 20px; max-width: 500px; margin: 20px auto; }
@@ -434,8 +478,110 @@ def render_komentarze(conn, film_id, uzytkownik):
             '</div>' + odp_html + '</div>')
     return html
 
+def get_relacje_html(conn, uzytkownik):
+    teraz = datetime.now().isoformat()
+    # Usuń wygasłe
+    conn.execute("DELETE FROM relacje WHERE wygasa IS NOT NULL AND wygasa < ?", (teraz,))
+    conn.commit()
+    # Pobierz relacje obserwowanych + własne
+    obserwowani = [r['obserwowany'] for r in conn.execute(
+        "SELECT obserwowany FROM obserwowania WHERE obserwujacy=?", (uzytkownik,)).fetchall()]
+    autorzy = [uzytkownik] + obserwowani
+    relacje_per_autor = {}
+    for autor in autorzy:
+        r = conn.execute(
+            "SELECT * FROM relacje WHERE autor=? AND (widocznosc='wszyscy' OR (widocznosc='znajomi' AND ? IN "
+            "(SELECT obserwowany FROM obserwowania WHERE obserwujacy=?))) ORDER BY data DESC LIMIT 1",
+            (autor, uzytkownik, autor)).fetchone()
+        if r:
+            relacje_per_autor[autor] = r
+    html = '<div class="relacje-row">'
+    # Najpierw własna relacja / dodaj
+    wlasna = relacje_per_autor.get(uzytkownik)
+    if wlasna:
+        html += ('<div class="relacja-item" onclick="pokazRelacje(' + str(wlasna['id']) + ')">'
+                 '<div class="relacja-ring">' + avatar_html(uzytkownik, 'relacja') + '</div>'
+                 '<span class="relacja-nazwa">Ty</span></div>')
+    else:
+        html += ('<a href="/dodaj#relacja" class="relacja-item">'
+                 '<div class="relacja-dodaj"><svg viewBox="0 0 24 24"><path fill="#fe2c55" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>'
+                 '<span class="relacja-nazwa">Dodaj</span></a>')
+    for autor in obserwowani:
+        r = relacje_per_autor.get(autor)
+        if r:
+            html += ('<div class="relacja-item" onclick="pokazRelacje(' + str(r['id']) + ')">'
+                     '<div class="relacja-ring">' + avatar_html(autor, 'relacja') + '</div>'
+                     '<span class="relacja-nazwa">@' + autor + '</span></div>')
+    html += '</div>'
+    return html
+
 @app.route("/")
 def strona_glowna():
+    if 'uzytkownik' not in session:
+        return redirect(url_for('logowanie'))
+    conn = get_db()
+    uzytkownik = session['uzytkownik']
+    relacje_html = get_relacje_html(conn, uzytkownik)
+    filmy = build_feed(conn, uzytkownik)
+    filmy_html = ""
+    for film in filmy:
+        filmy_html += ('<a href="/ogladaj/' + str(film['id']) + '" class="film-card">'
+            '<video preload="metadata" muted><source src="' + film['url'] + '"></video>'
+            '<div class="film-card-overlay">'
+            '<p class="film-card-autor">@' + film['autor'] + '</p>'
+            '<p class="film-card-tytul">' + film['tytul'] + '</p>'
+            '</div></a>')
+    # Pobierz wszystkie relacje do viewera
+    teraz = datetime.now().isoformat()
+    wszystkie_relacje = conn.execute(
+        "SELECT * FROM relacje WHERE wygasa IS NULL OR wygasa > ? ORDER BY data DESC", (teraz,)).fetchall()
+    relacje_data = []
+    for r in wszystkie_relacje:
+        relacje_data.append({'id': r['id'], 'autor': r['autor'], 'plik': r['plik'], 'opis': r['opis'] or ''})
+    conn.close()
+    import json
+    relacje_json = json.dumps(relacje_data)
+    return ('<!DOCTYPE html><html><head><title>OlivoVid</title><meta name="viewport" content="width=device-width, initial-scale=1">'
+            + STYLE + '</head><body>'
+            + top_nav_html(uzytkownik) +
+            '<div class="main-page">'
+            + relacje_html +
+            '<div class="filmy-grid">' + (filmy_html if filmy_html else '<p class="empty" style="grid-column:1/-1;">Brak filmów</p>') + '</div>'
+            '</div>'
+            + bottom_nav_html('home', uzytkownik) +
+            '<div class="toast" id="toast"></div>'
+            '<div class="relacja-viewer" id="relViewer">'
+            '<div class="relacja-progress"><div class="relacja-progress-fill" id="relProgress"></div></div>'
+            '<button class="relacja-viewer-close" onclick="zamknijRelacje()">✕</button>'
+            '<div class="relacja-viewer-header" id="relHeader"></div>'
+            '<img class="relacja-viewer-img" id="relImg" src="" alt="">'
+            '<p class="relacja-viewer-opis" id="relOpis"></p>'
+            '</div>'
+            '<script>'
+            'const relacje=' + relacje_json + ';'
+            'let relTimer=null;'
+            'function pokazRelacje(id){'
+            'const r=relacje.find(x=>x.id===id);if(!r)return;'
+            'document.getElementById("relImg").src="/relacja_img/"+r.plik;'
+            'document.getElementById("relOpis").textContent=r.opis;'
+            'document.getElementById("relHeader").innerHTML=\'<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid white;">\'+\'<img src="/avatar/\'+r.autor+\'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">\'+\'</div><span style="font-weight:700;">@\'+r.autor+\'</span>\';'
+            'document.getElementById("relViewer").classList.add("open");'
+            'const prog=document.getElementById("relProgress");'
+            'prog.style.width="0%";prog.style.transition="none";'
+            'setTimeout(()=>{prog.style.transition="width 5s linear";prog.style.width="100%";},50);'
+            'if(relTimer)clearTimeout(relTimer);relTimer=setTimeout(zamknijRelacje,5000);'
+            '}'
+            'function zamknijRelacje(){'
+            'document.getElementById("relViewer").classList.remove("open");'
+            'if(relTimer)clearTimeout(relTimer);'
+            'document.getElementById("relProgress").style.width="0%";'
+            '}'
+            'function pokazToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000);}'
+            '</script>'
+            '</body></html>')
+
+@app.route("/filmy")
+def filmy_page():
     if 'uzytkownik' not in session:
         return redirect(url_for('logowanie'))
     conn = get_db()
@@ -458,7 +604,7 @@ def strona_glowna():
         film_url = "https://olivovid.onrender.com/film/" + str(fid)
         repost_label = ""
         if repost_info:
-            repost_label = ('<div class="repost-label"><svg viewBox="0 0 24 24"><path fill="#aaa" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>'
+            repost_label = ('<div class="repost-label"><svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path fill="#aaa" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>'
                 'Repost od <a href="/profil/' + repost_info['uzytkownik'] + '">@' + repost_info['uzytkownik'] + '</a></div>')
         filmy_html += ('<div class="video-slide" id="slide-' + str(fid) + '">'
             '<video loop playsinline preload="metadata" id="video-' + str(fid) + '"><source src="' + film['url'] + '"></video>'
@@ -485,7 +631,7 @@ def strona_glowna():
             'Kopiuj link</button></div></div>')
     conn.close()
     if not filmy_html:
-        filmy_html = '<div class="video-slide"><p class="empty">Brak filmów<br>Wgraj pierwszy!</p></div>'
+        filmy_html = '<div class="video-slide"><p class="empty">Brak filmów</p></div>'
     js = '''<script>
     function pokazToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
     const slides=document.querySelectorAll('.video-slide');
@@ -493,8 +639,7 @@ def strona_glowna():
     slides.forEach(s=>observer.observe(s));
     slides.forEach(slide=>{const video=slide.querySelector('video');const id=slide.id.replace('slide-','');const ind=document.getElementById('pause-'+id);
         if(video){video.addEventListener('click',function(e){if(e.target.closest('.video-side-actions')||e.target.closest('.video-overlay'))return;
-            if(video.paused){video.play();ind.classList.remove('show');}else{video.pause();ind.classList.add('show');setTimeout(()=>ind.classList.remove('show'),800);}});}
-    });
+            if(video.paused){video.play();ind.classList.remove('show');}else{video.pause();ind.classList.add('show');setTimeout(()=>ind.classList.remove('show'),800);}});}});
     document.addEventListener('keydown',function(e){if(e.code==='Space'&&e.target.tagName!=='INPUT'){e.preventDefault();
         const v=Array.from(slides).find(s=>{const r=s.getBoundingClientRect();return r.top>=-50&&r.top<=50;});
         if(v){const vid=v.querySelector('video');const id=v.id.replace('slide-','');const ind=document.getElementById('pause-'+id);
@@ -519,19 +664,101 @@ def strona_glowna():
             document.getElementById('kom-'+kid).insertAdjacentHTML('beforeend','<div class="comment reply"><a href="/profil/'+d.uzytkownik+'" class="comment-author">@'+d.uzytkownik+'</a><p class="comment-text">'+d.tresc+'</p></div>');
             inp.value='';document.getElementById('reply-'+kid).classList.remove('active');});}
     </script>'''
-    return ('<!DOCTYPE html><html><head><title>OlivoVid</title><meta name="viewport" content="width=device-width, initial-scale=1">'
-            + STYLE + '</head><body>' + nav_html(uzytkownik) + '<div class="feed">' + filmy_html + '</div><div class="toast" id="toast"></div>' + js + '</body></html>')
+    return ('<!DOCTYPE html><html><head><title>Filmy - OlivoVid</title><meta name="viewport" content="width=device-width, initial-scale=1">'
+            + STYLE + '</head><body>'
+            + '<div class="feed">' + filmy_html + '</div>'
+            + bottom_nav_html('filmy', uzytkownik)
+            + '<div class="toast" id="toast"></div>' + js + '</body></html>')
+
+@app.route("/dodaj")
+def dodaj_page():
+    if 'uzytkownik' not in session:
+        return redirect(url_for('logowanie'))
+    aktywne = wgrywanie_aktywne()
+    fwm = filmy_w_tym_miesiacu(session['uzytkownik'])
+    if not aktywne:
+        film_html = '<p class="limit-warn">Wgrywanie filmów jest tymczasowo wyłączone.</p>'
+    elif fwm >= LIMIT_FILMOW_MIESIECZNIE:
+        film_html = '<p class="limit-warn">Osiągnąłeś limit filmów w tym miesiącu.</p>'
+    else:
+        pozostalo = LIMIT_FILMOW_MIESIECZNIE - fwm
+        film_html = ('<form method="POST" action="/upload" enctype="multipart/form-data" id="uploadForm">'
+            '<input type="text" name="tytul" placeholder="Tytuł wideo" required style="width:100%;background:#222;border:1px solid #333;color:white;padding:14px 16px;border-radius:12px;font-size:15px;margin-bottom:12px;outline:none;">'
+            '<label for="fileInput" class="file-label"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#aaa" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>Wybierz wideo</label>'
+            '<input type="file" name="wideo" accept="video/*" class="file-input" id="fileInput" onchange="document.getElementById(\'fileName\').textContent=this.files[0].name">'
+            '<p style="color:#555;font-size:13px;margin:8px 0;" id="fileName">Nie wybrano pliku</p>'
+            '<button type="submit" class="upload-btn" id="uploadBtn">Wgraj wideo</button>'
+            '<p class="limit-info">Pozostało: <b>' + str(pozostalo) + '</b> / ' + str(LIMIT_FILMOW_MIESIECZNIE) + ' w tym miesiącu</p></form>')
+    return ('<!DOCTYPE html><html><head><title>Dodaj - OlivoVid</title>'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
+            '<div class="upload-page"><div class="upload-box">'
+            '<div class="tabs-dodaj">'
+            '<button class="tab-dodaj active" id="tab-film-btn" onclick="pokazTab(\'film\')">🎬 Film</button>'
+            '<button class="tab-dodaj" id="tab-relacja-btn" onclick="pokazTab(\'relacja\')">📸 Relacja</button>'
+            '</div>'
+            '<div id="tab-film"><h2>Wgraj film</h2>' + film_html + '</div>'
+            '<div id="tab-relacja" style="display:none;"><h2>Dodaj relację</h2>'
+            '<form method="POST" action="/dodaj_relacje" enctype="multipart/form-data" id="relForm">'
+            '<label for="relFile" class="file-label"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#aaa" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>Wybierz zdjęcie</label>'
+            '<input type="file" name="zdjecie" accept="image/*" class="file-input" id="relFile" onchange="document.getElementById(\'relFileName\').textContent=this.files[0].name" required>'
+            '<p style="color:#555;font-size:13px;margin:8px 0;" id="relFileName">Nie wybrano pliku</p>'
+            '<textarea name="opis" placeholder="Opis (opcjonalnie)..." style="width:100%;background:#222;border:1px solid #333;color:white;padding:12px 16px;border-radius:12px;font-size:14px;outline:none;resize:none;height:70px;margin-bottom:12px;"></textarea>'
+            '<select name="widocznosc" class="select-style"><option value="wszyscy">Wszyscy</option><option value="znajomi">Tylko obserwujący</option></select>'
+            '<select name="czas" class="select-style">'
+            '<option value="1">1 dzień</option><option value="2">2 dni</option>'
+            '<option value="7">Tydzień</option><option value="30">Miesiąc</option>'
+            '<option value="365">Rok</option><option value="0">Na zawsze</option>'
+            '</select>'
+            '<button type="submit" class="upload-btn">Opublikuj relację</button>'
+            '</form></div>'
+            '</div></div>'
+            '<script>'
+            'document.getElementById("uploadForm")&&document.getElementById("uploadForm").addEventListener("submit",function(){const b=document.getElementById("uploadBtn");if(b){b.disabled=true;b.textContent="Wgrywanie...";}});'
+            'function pokazTab(t){'
+            'document.getElementById("tab-film").style.display=t==="film"?"block":"none";'
+            'document.getElementById("tab-relacja").style.display=t==="relacja"?"block":"none";'
+            'document.getElementById("tab-film-btn").className="tab-dodaj"+(t==="film"?" active":"");'
+            'document.getElementById("tab-relacja-btn").className="tab-dodaj"+(t==="relacja"?" active":"");}'
+            'if(location.hash==="#relacja")pokazTab("relacja");'
+            '</script>'
+            + bottom_nav_html('dodaj', session['uzytkownik']) + '</body></html>')
+
+@app.route("/dodaj_relacje", methods=["POST"])
+def dodaj_relacje():
+    if 'uzytkownik' not in session:
+        return redirect(url_for('logowanie'))
+    plik = request.files.get('zdjecie')
+    opis = request.form.get('opis', '')[:200]
+    widocznosc = request.form.get('widocznosc', 'wszyscy')
+    czas = int(request.form.get('czas', 1))
+    if not plik:
+        return redirect(url_for('dodaj_page'))
+    img = Image.open(plik)
+    img = img.convert('RGB')
+    img.thumbnail((1080, 1920))
+    nazwa = session['uzytkownik'] + '_' + str(random.randint(100000, 999999)) + '.jpg'
+    img.save(os.path.join(RELACJE_FOLDER, nazwa), 'JPEG')
+    if czas == 0:
+        wygasa = None
+    else:
+        wygasa = (datetime.now() + timedelta(days=czas)).isoformat()
+    conn = get_db()
+    conn.execute("INSERT INTO relacje (autor, plik, opis, widocznosc, wygasa) VALUES (?,?,?,?,?)",
+                 (session['uzytkownik'], nazwa, opis, widocznosc, wygasa))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('strona_glowna'))
+
+@app.route("/relacja_img/<nazwa>")
+def relacja_img(nazwa):
+    return send_from_directory(RELACJE_FOLDER, nazwa)
 
 @app.route("/ogladaj/<int:film_id>")
 def ogladaj(film_id):
     if 'uzytkownik' not in session:
         return redirect(url_for('logowanie'))
-    conn = get_db()
-    film = conn.execute("SELECT * FROM filmy WHERE id=?", (film_id,)).fetchone()
-    conn.close()
-    if not film:
-        return redirect(url_for('strona_glowna'))
-    return redirect(url_for('strona_glowna') + '#slide-' + str(film_id))
+    return redirect(url_for('filmy_page') + '#slide-' + str(film_id))
 
 @app.route("/repostuj/<int:film_id>", methods=["POST"])
 def repostuj(film_id):
@@ -556,10 +783,7 @@ def wiadomosci():
         return redirect(url_for('logowanie'))
     conn = get_db()
     uzytkownik = session['uzytkownik']
-    # Prośby oczekujące
-    prosby = conn.execute(
-        "SELECT * FROM prosby_chat WHERE do=? AND status='oczekuje' ORDER BY data DESC",
-        (uzytkownik,)).fetchall()
+    prosby = conn.execute("SELECT * FROM prosby_chat WHERE do=? AND status='oczekuje' ORDER BY data DESC", (uzytkownik,)).fetchall()
     prosby_html = ""
     for p in prosby:
         prosby_html += ('<div class="prosba-card">'
@@ -570,7 +794,6 @@ def wiadomosci():
             '<button class="akceptuj-btn" onclick="odpowiedzProsbie(' + str(p['id']) + ',\'zaakceptowana\')">Akceptuj</button>'
             '<button class="odrzuc-btn" onclick="odpowiedzProsbie(' + str(p['id']) + ',\'odrzucona\')">Odrzuć</button>'
             '</div></div>')
-    # Aktywne rozmowy
     rozm = conn.execute(
         "SELECT CASE WHEN od=? THEN do ELSE od END as rozmowca, MAX(data) as ostatnia, MAX(id) as last_id "
         "FROM wiadomosci WHERE od=? OR do=? GROUP BY rozmowca ORDER BY ostatnia DESC",
@@ -578,9 +801,8 @@ def wiadomosci():
     rozm_html = ""
     for r in rozm:
         ost = conn.execute("SELECT * FROM wiadomosci WHERE id=?", (r['last_id'],)).fetchone()
-        nieprzeczytane = conn.execute(
-            "SELECT COUNT(*) as c FROM wiadomosci WHERE od=? AND do=? AND przeczytana=0",
-            (r['rozmowca'], uzytkownik)).fetchone()['c']
+        nieprzeczytane = conn.execute("SELECT COUNT(*) as c FROM wiadomosci WHERE od=? AND do=? AND przeczytana=0",
+                                      (r['rozmowca'], uzytkownik)).fetchone()['c']
         if ost['typ'] == 'zdjecie': preview = '📷 Zdjęcie'
         else: preview = (ost['tresc'] or '')[:40]
         rozm_html += ('<a href="/chat/' + r['rozmowca'] + '" class="chat-row ' + ('unread' if nieprzeczytane else '') + '">'
@@ -591,14 +813,14 @@ def wiadomosci():
     conn.close()
     return ('<!DOCTYPE html><html><head><title>Wiadomości - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            + STYLE + '</head><body>' + nav_html(uzytkownik) +
+            + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
             '<div class="chat-page"><div class="chat-list"><h2>Wiadomości</h2>'
             + (('<div style="margin-bottom:16px;"><p style="color:#aaa;font-size:13px;margin-bottom:8px;">Prośby o wiadomość</p>' + prosby_html + '</div>') if prosby_html else '')
             + (rozm_html if rozm_html else '<p style="color:#555;text-align:center;padding:40px;">Brak wiadomości</p>')
             + '</div></div>'
-            '<script>'
-            'function odpowiedzProsbie(id,status){fetch("/odpowiedz_prosbie/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:status})}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}'
-            '</script></body></html>')
+            + bottom_nav_html('wiad', uzytkownik) +
+            '<script>function odpowiedzProsbie(id,status){fetch("/odpowiedz_prosbie/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:status})}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}</script>'
+            '</body></html>')
 
 @app.route("/odpowiedz_prosbie/<int:pid>", methods=["POST"])
 def odpowiedz_prosbie(pid):
@@ -629,19 +851,15 @@ def wyslij_prosbe(do):
         return jsonify({}), 401
     data = request.get_json()
     wiadomosc = data.get('wiadomosc', '').strip()
-    if not wiadomosc:
+    if not wiadomosc or not do:
         return jsonify({'error': 'Napisz wiadomość'}), 400
     conn = get_db()
-    istniejaca = conn.execute(
-        "SELECT * FROM prosby_chat WHERE od=? AND do=?",
-        (session['uzytkownik'], do)).fetchone()
+    istniejaca = conn.execute("SELECT * FROM prosby_chat WHERE od=? AND do=?", (session['uzytkownik'], do)).fetchone()
     if istniejaca:
         conn.close()
         return jsonify({'error': 'Prośba już wysłana'}), 400
-    conn.execute("INSERT INTO prosby_chat (od, do, wiadomosc) VALUES (?,?,?)",
-                 (session['uzytkownik'], do, wiadomosc))
-    conn.execute("INSERT INTO powiadomienia (dla, od, typ, film_id) VALUES (?,?,'prosba_chat',0)",
-                 (do, session['uzytkownik']))
+    conn.execute("INSERT INTO prosby_chat (od, do, wiadomosc) VALUES (?,?,?)", (session['uzytkownik'], do, wiadomosc))
+    conn.execute("INSERT INTO powiadomienia (dla, od, typ, film_id) VALUES (?,?,'prosba_chat',0)", (do, session['uzytkownik']))
     conn.commit()
     conn.close()
     return jsonify({'ok': True})
@@ -654,45 +872,38 @@ def chat(rozmowca):
     uzytkownik = session['uzytkownik']
     moze = czy_moze_pisac(uzytkownik, rozmowca, conn)
     if not moze:
-        # Sprawdź czy prośba już wysłana
-        prosba = conn.execute(
-            "SELECT * FROM prosby_chat WHERE od=? AND do=?",
-            (uzytkownik, rozmowca)).fetchone()
+        prosba = conn.execute("SELECT * FROM prosby_chat WHERE od=? AND do=?", (uzytkownik, rozmowca)).fetchone()
         conn.close()
         if prosba and prosba['status'] == 'oczekuje':
-            return ('<!DOCTYPE html><html><head><title>Chat - OlivoVid</title>'
-                    '<meta name="viewport" content="width=device-width, initial-scale=1">'
-                    + STYLE + '</head><body>' + nav_html(uzytkownik) +
+            return ('<!DOCTYPE html><html><head><title>Chat</title><meta name="viewport" content="width=device-width, initial-scale=1">'
+                    + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
                     '<div class="upload-page"><div style="max-width:500px;margin:40px auto;padding:0 16px;text-align:center;">'
-                    '<p style="color:#aaa;font-size:16px;margin-bottom:16px;">Prośba o wiadomość wysłana do @' + rozmowca + '</p>'
-                    '<p style="color:#555;font-size:14px;">Poczekaj aż zaakceptuje</p>'
+                    '<p style="color:#aaa;font-size:16px;">Prośba wysłana do @' + rozmowca + '</p>'
+                    '<p style="color:#555;font-size:14px;margin-top:8px;">Poczekaj aż zaakceptuje</p>'
                     '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#fe2c55;">← Wróć</a>'
-                    '</div></div></body></html>')
+                    '</div></div>' + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
         elif prosba and prosba['status'] == 'odrzucona':
-            conn2 = get_db()
-            conn2.close()
-            return ('<!DOCTYPE html><html><head><title>Chat - OlivoVid</title>'
-                    '<meta name="viewport" content="width=device-width, initial-scale=1">'
-                    + STYLE + '</head><body>' + nav_html(uzytkownik) +
+            conn.close()
+            return ('<!DOCTYPE html><html><head><title>Chat</title><meta name="viewport" content="width=device-width, initial-scale=1">'
+                    + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
                     '<div class="upload-page"><div style="max-width:500px;margin:40px auto;padding:0 16px;text-align:center;">'
                     '<p style="color:#fe2c55;font-size:16px;">@' + rozmowca + ' odrzucił Twoją prośbę</p>'
                     '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#fe2c55;">← Wróć</a>'
-                    '</div></div></body></html>')
+                    '</div></div>' + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
         else:
-            return ('<!DOCTYPE html><html><head><title>Chat - OlivoVid</title>'
-                    '<meta name="viewport" content="width=device-width, initial-scale=1">'
-                    + STYLE + '</head><body>' + nav_html(uzytkownik) +
+            conn.close()
+            return ('<!DOCTYPE html><html><head><title>Chat</title><meta name="viewport" content="width=device-width, initial-scale=1">'
+                    + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
                     '<div class="upload-page"><div class="prosba-send-box">'
                     '<h2>Napisz do @' + rozmowca + '</h2>'
-                    '<p style="color:#888;font-size:13px;margin-bottom:10px;">Wyślij prośbę o rozmowę — @' + rozmowca + ' musi ją zaakceptować</p>'
+                    '<p style="color:#888;font-size:13px;margin-bottom:10px;">Wyślij prośbę — @' + rozmowca + ' musi ją zaakceptować</p>'
                     '<textarea id="prosba-msg" placeholder="Napisz pierwszą wiadomość..."></textarea>'
                     '<button class="prosba-send-btn" onclick="wyslijProsbe()">Wyślij prośbę</button>'
                     '</div></div>'
-                    '<script>'
-                    'function wyslijProsbe(){const msg=document.getElementById("prosba-msg").value.trim();if(!msg)return;'
+                    '<script>function wyslijProsbe(){const msg=document.getElementById("prosba-msg").value.trim();if(!msg)return;'
                     'fetch("/wyslij_prosbe/' + rozmowca + '",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wiadomosc:msg})})'
-                    '.then(r=>r.json()).then(d=>{if(d.ok)location.reload();else alert(d.error||"Błąd");});}'
-                    '</script></body></html>')
+                    '.then(r=>r.json()).then(d=>{if(d.ok)location.reload();else alert(d.error||"Błąd");});}</script>'
+                    + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
     wiad = conn.execute(
         "SELECT * FROM wiadomosci WHERE (od=? AND do=?) OR (od=? AND do=?) ORDER BY data ASC",
         (uzytkownik, rozmowca, rozmowca, uzytkownik)).fetchall()
@@ -710,23 +921,21 @@ def chat(rozmowca):
             tresc_html = w['tresc']
         reakcja_html = ''
         if w['reakcja']:
-            rk = 'left' if jest_moja else ''
+            rk = '' if jest_moja else 'left'
             reakcja_html = '<span class="msg-reakcja ' + rk + '">' + w['reakcja'] + '</span>'
         elif not jest_moja:
             reakcja_html = '<span class="msg-reakcja left" onclick="pokazPicker(' + str(w['id']) + ')">＋</span>'
         msgs_html += ('<div class="msg-bubble ' + klasa + '" id="msg-' + str(w['id']) + '">'
-            + tresc_html +
-            '<div class="msg-time">' + w['data'][11:16] + '</div>'
-            + reakcja_html + '</div>')
+            + tresc_html + '<div class="msg-time">' + w['data'][11:16] + '</div>' + reakcja_html + '</div>')
         last_id = max(last_id, w['id'])
-    return ('<!DOCTYPE html><html><head><title>@' + rozmowca + ' - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>@' + rozmowca + '</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>'
             '<div class="conv-page">'
             '<div class="conv-header">'
             '<a href="/wiadomosci" class="conv-back"><svg viewBox="0 0 24 24"><path fill="white" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>'
             + avatar_html(rozmowca, 'sm') +
-            '<div><p class="conv-header-name">@' + rozmowca + '</p></div>'
+            '<p class="conv-header-name">@' + rozmowca + '</p>'
             '<a href="/profil/' + rozmowca + '" style="margin-left:auto;color:#aaa;font-size:13px;">Profil</a>'
             '</div>'
             '<div class="conv-messages" id="msgs">' + msgs_html + '</div>'
@@ -752,39 +961,22 @@ def chat(rozmowca):
             'let currentMsgId=null;'
             'const msgs=document.getElementById("msgs");'
             'msgs.scrollTop=msgs.scrollHeight;'
-            'function wyslijWiad(){'
-            'const inp=document.getElementById("msg-input");if(!inp.value.trim())return;'
-            'const txt=inp.value;inp.value="";'
+            'function wyslijWiad(){const inp=document.getElementById("msg-input");if(!inp.value.trim())return;const txt=inp.value;inp.value="";'
             'fetch("/wyslij_wiad",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({do:rozmowca,tresc:txt})})'
-            '.then(r=>r.json()).then(d=>{'
-            'msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble sent\' id=\'msg-"+d.id+"\'><span>"+d.tresc+"</span><div class=\'msg-time\'>"+d.czas+"</div></div>");'
-            'msgs.scrollTop=msgs.scrollHeight;lastId=Math.max(lastId,d.id);});}'
-            'function wyslijZdjecie(inp){'
-            'if(!inp.files[0])return;const fd=new FormData();fd.append("zdjecie",inp.files[0]);fd.append("do",rozmowca);'
-            'fetch("/wyslij_zdjecie",{method:"POST",body:fd}).then(r=>r.json()).then(d=>{'
-            'msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble sent\'><img src=\'/chat_img/"+d.nazwa+"\'><div class=\'msg-time\'>"+d.czas+"</div></div>");'
-            'msgs.scrollTop=msgs.scrollHeight;lastId=Math.max(lastId,d.id||0);});}'
+            '.then(r=>r.json()).then(d=>{msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble sent\' id=\'msg-"+d.id+"\'><span>"+d.tresc+"</span><div class=\'msg-time\'>"+d.czas+"</div></div>");msgs.scrollTop=msgs.scrollHeight;lastId=Math.max(lastId,d.id);});}'
+            'function wyslijZdjecie(inp){if(!inp.files[0])return;const fd=new FormData();fd.append("zdjecie",inp.files[0]);fd.append("do",rozmowca);'
+            'fetch("/wyslij_zdjecie",{method:"POST",body:fd}).then(r=>r.json()).then(d=>{msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble sent\'><img src=\'/chat_img/"+d.nazwa+"\'><div class=\'msg-time\'>"+d.czas+"</div></div>");msgs.scrollTop=msgs.scrollHeight;});}'
             'function pokazPicker(id){currentMsgId=id;document.getElementById("picker").classList.add("open");}'
             'document.addEventListener("click",function(e){if(!e.target.closest(".reakcja-picker")&&!e.target.closest(".msg-reakcja"))document.getElementById("picker").classList.remove("open");});'
-            'function dajReakcje(id,emoji){'
-            'fetch("/reakcja/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reakcja:emoji})})'
-            '.then(r=>r.json()).then(()=>{'
-            'const el=document.getElementById("msg-"+id);if(el){let r=el.querySelector(".msg-reakcja");'
-            'if(r)r.textContent=emoji;else el.insertAdjacentHTML("beforeend","<span class=\'msg-reakcja left\'>"+emoji+"</span>");}'
-            'document.getElementById("picker").classList.remove("open");});}'
-            'function pollChat(){'
-            'fetch("/poll_chat/"+rozmowca+"?od="+lastId).then(r=>r.json()).then(d=>{'
-            'const typing=d.pisze;'
-            'let tInd=document.getElementById("typing-ind");'
+            'function dajReakcje(id,emoji){fetch("/reakcja/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reakcja:emoji})}).then(r=>r.json()).then(()=>{const el=document.getElementById("msg-"+id);if(el){let r=el.querySelector(".msg-reakcja");if(r)r.textContent=emoji;else el.insertAdjacentHTML("beforeend","<span class=\'msg-reakcja left\'>"+emoji+"</span>");}document.getElementById("picker").classList.remove("open");});}'
+            'function pollChat(){fetch("/poll_chat/"+rozmowca+"?od="+lastId).then(r=>r.json()).then(d=>{const typing=d.pisze;let tInd=document.getElementById("typing-ind");'
             'if(typing&&!tInd){msgs.insertAdjacentHTML("beforeend","<div id=\'typing-ind\' class=\'msg-bubble received\' style=\'padding:10px 16px;\'><span class=\'typing-dots\'><span></span><span></span><span></span></span></div>");msgs.scrollTop=msgs.scrollHeight;}'
             'else if(!typing&&tInd)tInd.remove();'
-            'd.wiad.forEach(w=>{if(!document.getElementById("msg-"+w.id)){'
-            'let t=w.typ==="zdjecie"?"<img src=\'/chat_img/"+w.tresc+"\' style=\'max-width:200px;border-radius:12px;\'>":w.tresc;'
+            'd.wiad.forEach(w=>{if(!document.getElementById("msg-"+w.id)){let t=w.typ==="zdjecie"?"<img src=\'/chat_img/"+w.tresc+"\' style=\'max-width:200px;border-radius:12px;\'>":w.tresc;'
             'msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble received\' id=\'msg-"+w.id+"\'><span>"+t+"</span><div class=\'msg-time\'>"+w.data.slice(11,16)+"</div><span class=\'msg-reakcja left\' onclick=\'pokazPicker("+w.id+")\'>＋</span></div>");'
             'msgs.scrollTop=msgs.scrollHeight;lastId=Math.max(lastId,w.id);}});});}'
             'setInterval(pollChat,2000);'
-            'document.getElementById("msg-input").addEventListener("input",function(){'
-            'fetch("/pisze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({do:rozmowca,pisze:this.value.length>0})});});'
+            'document.getElementById("msg-input").addEventListener("input",function(){fetch("/pisze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({do:rozmowca,pisze:this.value.length>0});});});'
             '</script></body></html>')
 
 @app.route("/wyslij_wiad", methods=["POST"])
@@ -802,10 +994,8 @@ def wyslij_wiad():
         return jsonify({}), 403
     cur = conn.execute("INSERT INTO wiadomosci (od, do, tresc, typ) VALUES (?,?,?,'tekst')",
                        (session['uzytkownik'], do, tresc))
-    conn.execute("INSERT INTO powiadomienia (dla, od, typ, film_id) VALUES (?,?,'wiadomosc',0)",
-                 (do, session['uzytkownik']))
-    conn.execute("INSERT OR REPLACE INTO ustawienia VALUES (?,?)",
-                 ('pisze_' + session['uzytkownik'] + '_do_' + do, '0'))
+    conn.execute("INSERT INTO powiadomienia (dla, od, typ, film_id) VALUES (?,?,'wiadomosc',0)", (do, session['uzytkownik']))
+    conn.execute("INSERT OR REPLACE INTO ustawienia VALUES (?,?)", ('pisze_' + session['uzytkownik'] + '_do_' + do, '0'))
     conn.commit()
     wid = cur.lastrowid
     czas = conn.execute("SELECT data FROM wiadomosci WHERE id=?", (wid,)).fetchone()['data'][11:16]
@@ -860,9 +1050,8 @@ def poll_chat(rozmowca):
     conn = get_db()
     uzytkownik = session['uzytkownik']
     ostatni = request.args.get('od', 0, type=int)
-    wiad = conn.execute(
-        "SELECT * FROM wiadomosci WHERE od=? AND do=? AND id>? ORDER BY data ASC",
-        (rozmowca, uzytkownik, ostatni)).fetchall()
+    wiad = conn.execute("SELECT * FROM wiadomosci WHERE od=? AND do=? AND id>? ORDER BY data ASC",
+                        (rozmowca, uzytkownik, ostatni)).fetchall()
     conn.execute("UPDATE wiadomosci SET przeczytana=1 WHERE od=? AND do=?", (rozmowca, uzytkownik))
     klucz = 'pisze_' + rozmowca + '_do_' + uzytkownik
     val = conn.execute("SELECT wartosc FROM ustawienia WHERE klucz=?", (klucz,)).fetchone()
@@ -894,8 +1083,9 @@ def profil(nazwa):
     if not user:
         conn.close()
         return ('<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">'
-                + STYLE + '</head><body>' + nav_html(session['uzytkownik'])
-                + '<p style="color:white;text-align:center;padding:40px;">Użytkownik nie istnieje</p></body></html>')
+                + STYLE + '</head><body>' + top_nav_html(session['uzytkownik'])
+                + '<p style="color:white;text-align:center;padding:40px;">Użytkownik nie istnieje</p>'
+                + bottom_nav_html('profil', session['uzytkownik']) + '</body></html>')
     filmy = conn.execute("SELECT * FROM filmy WHERE autor=? ORDER BY data DESC", (nazwa,)).fetchall()
     reposty_raw = conn.execute(
         "SELECT f.* FROM filmy f JOIN reposty r ON f.id=r.film_id WHERE r.uzytkownik=? ORDER BY r.data DESC",
@@ -933,9 +1123,10 @@ def profil(nazwa):
         follow_btn = ('<button class="' + obs_class + '" id="follow-btn" onclick="toggleObserwuj(\'' + nazwa + '\')">' + obs_text + '</button>'
                       + '<a href="/chat/' + nazwa + '" class="msg-btn"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="white" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>Napisz</a>')
 
+    aktywna_nav = 'profil' if jest_swoj else ''
     return ('<!DOCTYPE html><html><head><title>@' + nazwa + ' - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            + STYLE + '</head><body>' + nav_html(session['uzytkownik']) +
+            + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="profile-page"><div class="profile-header"><div class="profile-top">'
             + avatar_html(nazwa, 'lg') +
             '<div><p class="profile-name">@' + nazwa + '</p>'
@@ -954,6 +1145,7 @@ def profil(nazwa):
             '</div><div id="tab-reposty" class="profile-grid" style="display:none;">'
             + (reposty_html or '<p style="color:#555;text-align:center;padding:40px;grid-column:1/-1;">Brak repostów</p>') +
             '</div></div>'
+            + bottom_nav_html(aktywna_nav, session['uzytkownik']) +
             '<script>'
             'function pokazTab(tab,el){document.getElementById("tab-filmy").style.display=tab==="filmy"?"grid":"none";document.getElementById("tab-reposty").style.display=tab==="reposty"?"grid":"none";document.querySelectorAll(".profile-tab").forEach(t=>t.classList.remove("active"));el.classList.add("active");}'
             'function toggleObserwuj(nazwa){fetch("/obserwuj/"+nazwa,{method:"POST"}).then(r=>r.json()).then(d=>{const btn=document.getElementById("follow-btn");btn.textContent=d.obserwuje?"Obserwujesz":"Obserwuj";btn.className="follow-btn"+(d.obserwuje?" following":"");document.getElementById("obserwujacych-count").textContent=d.obserwujacych;});}'
@@ -988,15 +1180,16 @@ def szukaj():
         wyniki = '<p style="color:#555;text-align:center;padding:40px;">Wpisz czego szukasz</p>'
     return ('<!DOCTYPE html><html><head><title>Szukaj - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            + STYLE + '</head><body>' + nav_html(session['uzytkownik']) +
+            + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="search-page"><div class="search-box"><form method="GET" action="/szukaj"><div class="search-input-wrap">'
             '<input type="text" name="q" class="search-input" placeholder="Szukaj..." value="' + query + '" autofocus>'
             '<button type="submit" class="search-btn"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="white" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></button>'
-            '</div></form></div><div class="search-section">' + wyniki + '</div></div></body></html>')
+            '</div></form></div><div class="search-section">' + wyniki + '</div></div>'
+            + bottom_nav_html('', session['uzytkownik']) + '</body></html>')
 
 @app.route("/film/<int:film_id>")
 def film_bezposredni(film_id):
-    return redirect(url_for('strona_glowna'))
+    return redirect(url_for('filmy_page'))
 
 @app.route("/obserwuj/<nazwa>", methods=["POST"])
 def obserwuj(nazwa):
@@ -1034,43 +1227,22 @@ def powiadomienia():
         elif n['typ'] == 'obserwowanie': tekst = '<b>@' + n['od'] + '</b> zaczął Cię obserwować'
         elif n['typ'] == 'wiadomosc': tekst = '<b>@' + n['od'] + '</b> wysłał Ci wiadomość'
         elif n['typ'] == 'prosba_chat': tekst = '<b>@' + n['od'] + '</b> chce Ci wysłać wiadomość'
-        elif n['typ'] == 'chat_zaakceptowany': tekst = '<b>@' + n['od'] + '</b> zaakceptował Twoją prośbę o chat'
+        elif n['typ'] == 'chat_zaakceptowany': tekst = '<b>@' + n['od'] + '</b> zaakceptował Twoją prośbę'
         else: tekst = '<b>@' + n['od'] + '</b> zareagował'
         notifs_html += ('<div class="notif-item ' + ('unread' if not n['przeczytane'] else '') + '">'
             + avatar_html(n['od'], 'sm') +
             '<div><p class="notif-text">' + tekst + '</p><p class="notif-time">' + n['data'][:16] + '</p></div></div>')
     return ('<!DOCTYPE html><html><head><title>Powiadomienia - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            + STYLE + '</head><body>' + nav_html(session['uzytkownik']) +
+            + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="notif-page"><div class="notif-list"><h2>Powiadomienia</h2>'
             + (notifs_html or '<p style="color:#555;text-align:center;padding:40px;">Brak powiadomień</p>')
-            + '</div></div></body></html>')
+            + '</div></div>'
+            + bottom_nav_html('', session['uzytkownik']) + '</body></html>')
 
 @app.route("/upload_page")
 def upload_page():
-    if 'uzytkownik' not in session:
-        return redirect(url_for('logowanie'))
-    aktywne = wgrywanie_aktywne()
-    fwm = filmy_w_tym_miesiacu(session['uzytkownik'])
-    if not aktywne:
-        upload_html = '<p class="limit-warn">Wgrywanie filmów jest tymczasowo wyłączone.</p>'
-    elif fwm >= LIMIT_FILMOW_MIESIECZNIE:
-        upload_html = '<p class="limit-warn">Osiągnąłeś limit ' + str(LIMIT_FILMOW_MIESIECZNIE) + ' filmów w tym miesiącu.</p>'
-    else:
-        pozostalo = LIMIT_FILMOW_MIESIECZNIE - fwm
-        upload_html = ('<form method="POST" action="/upload" enctype="multipart/form-data" id="uploadForm">'
-            '<input type="text" name="tytul" placeholder="Tytuł wideo" required><br>'
-            '<label for="fileInput" class="file-label"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#aaa" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>Wybierz wideo</label>'
-            '<input type="file" name="wideo" accept="video/*" class="file-input" id="fileInput" onchange="document.getElementById(\'fileName\').textContent=this.files[0].name">'
-            '<p style="color:#555;font-size:13px;margin:8px 0;" id="fileName">Nie wybrano pliku</p>'
-            '<button type="submit" class="upload-btn" id="uploadBtn">Wgraj wideo</button>'
-            '<p class="limit-info">Pozostało: <b>' + str(pozostalo) + '</b> / ' + str(LIMIT_FILMOW_MIESIECZNIE) + ' filmów w tym miesiącu</p></form>')
-    return ('<!DOCTYPE html><html><head><title>Wgraj - OlivoVid</title>'
-            '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            + STYLE + '</head><body>' + nav_html(session['uzytkownik']) +
-            '<div class="upload-page"><div class="upload-box"><h2>Wgraj wideo</h2>' + upload_html + '</div></div>'
-            '<script>document.getElementById("uploadForm")&&document.getElementById("uploadForm").addEventListener("submit",function(){const b=document.getElementById("uploadBtn");if(b){b.disabled=true;b.textContent="Wgrywanie...";}});</script>'
-            '</body></html>')
+    return redirect(url_for('dodaj_page'))
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -1127,13 +1299,14 @@ def admin():
             '<button class="delete-btn" onclick="usunFilm(' + str(film['id']) + ')">Usuń</button></div>')
     return ('<!DOCTYPE html><html><head><title>Admin - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            + STYLE + '</head><body>' + nav_html(session['uzytkownik']) +
+            + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="admin-page"><div class="admin-panel"><h2>Panel Admina</h2>'
             '<div class="admin-card"><h3>Wgrywanie filmów</h3>'
             '<button class="toggle-btn ' + ('toggle-on' if aktywne else 'toggle-off') + '" onclick="toggleWgrywanie()" id="toggleBtn">'
             + ('Włączone' if aktywne else 'Wyłączone') + '</button></div>'
             '<div class="admin-card"><h3>Wszystkie filmy (' + str(len(filmy)) + ')</h3>'
             + (filmy_html or '<p style="color:#555;">Brak filmów</p>') + '</div></div></div>'
+            + bottom_nav_html('', session['uzytkownik']) +
             '<script>'
             'function toggleWgrywanie(){fetch("/admin/toggle_wgrywanie",{method:"POST"}).then(r=>r.json()).then(d=>{const b=document.getElementById("toggleBtn");b.textContent=d.aktywne?"Włączone":"Wyłączone";b.className="toggle-btn "+(d.aktywne?"toggle-on":"toggle-off");});}'
             'function usunFilm(fid){if(!confirm("Usunąć ten film?"))return;fetch("/admin/usun_film/"+fid,{method:"POST"}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}'
@@ -1248,7 +1421,7 @@ def edytuj_profil():
     conn.close()
     return ('<!DOCTYPE html><html><head><title>Edytuj profil - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            + STYLE + '</head><body>' + nav_html(session['uzytkownik']) +
+            + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="upload-page"><div style="max-width:500px;margin:20px auto;padding:0 16px;">'
             '<div class="edit-form"><h2>Edytuj profil</h2><form method="POST" enctype="multipart/form-data">'
             '<label>Zdjęcie profilowe</label><br><br>' + avatar_html(session['uzytkownik'], 'lg') +
@@ -1256,7 +1429,8 @@ def edytuj_profil():
             '<label>Bio (max 150 znaków)</label>'
             '<textarea name="bio" placeholder="Napisz coś o sobie...">' + (user['bio'] or '') + '</textarea>'
             '<button type="submit" class="save-btn">Zapisz</button>'
-            '</form></div></div></div></body></html>')
+            '</form></div></div></div>'
+            + bottom_nav_html('profil', session['uzytkownik']) + '</body></html>')
 
 @app.route("/avatar/<nazwa>")
 def avatar(nazwa):
