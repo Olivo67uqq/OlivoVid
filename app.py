@@ -189,7 +189,7 @@ def top_nav_html(uzytkownik):
     search_svg = '<svg viewBox="0 0 24 24"><path fill="white" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>'
     bell_svg = '<svg viewBox="0 0 24 24"><path fill="white" d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>'
     return ('''<div class="nav">
-        <a href="/" style="text-decoration:none;" class="logo">Olivo<span>Vid</span></a>
+        <a href="/" style="text-decoration:none;" class="logo">Scroll</a>
         <div class="nav-right">
             <a href="/szukaj" class="nav-icon-btn">''' + search_svg + '''</a>
             <a href="/powiadomienia" class="nav-icon-btn" style="position:relative;">''' + bell_svg + notif_badge + '''</a>
@@ -201,28 +201,27 @@ STYLE = '''<style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: white; overflow: hidden; }
     .logo { font-size: 22px; font-weight: 900; color: white; letter-spacing: -1px; }
-    .logo span { color: #2980b9; }
     .nav { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.0)); }
     .nav-right { display: flex; align-items: center; gap: 6px; }
     .nav-icon-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.1); color: white; text-decoration: none; position: relative; }
     .nav-icon-btn svg { width: 22px; height: 22px; }
-    .notif-badge { position: absolute; top: 4px; right: 4px; background: #2980b9; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .notif-badge { position: absolute; top: 4px; right: 4px; background: #1a6bb5; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-around; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
     .bn-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #555; text-decoration: none; width: 48px; height: 48px; border-radius: 50%; position: relative; transition: color 0.15s; }
     .bn-item svg { width: 26px; height: 26px; }
     .bn-item.active { color: white; }
-    .bn-item.bn-plus { background: #2980b9; color: white; width: 48px; height: 48px; border-radius: 14px; }
+    .bn-item.bn-plus { background: #1a6bb5; color: white; width: 48px; height: 48px; border-radius: 14px; }
     .bn-item.bn-plus svg { width: 28px; height: 28px; }
-    .bn-badge { position: absolute; top: 4px; right: 4px; background: #2980b9; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #2980b9; flex-shrink: 0; }
-    .avatar-sm-placeholder { width: 32px; height: 32px; border-radius: 50%; background: #333; border: 2px solid #2980b9; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #2980b9; flex-shrink: 0; }
-    .avatar-lg { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #2980b9; }
-    .avatar-lg-placeholder { width: 76px; height: 76px; border-radius: 50%; background: #222; border: 3px solid #2980b9; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #2980b9; flex-shrink: 0; }
+    .bn-badge { position: absolute; top: 4px; right: 4px; background: #1a6bb5; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #1a6bb5; flex-shrink: 0; }
+    .avatar-sm-placeholder { width: 32px; height: 32px; border-radius: 50%; background: #333; border: 2px solid #1a6bb5; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #1a6bb5; flex-shrink: 0; }
+    .avatar-lg { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #1a6bb5; }
+    .avatar-lg-placeholder { width: 76px; height: 76px; border-radius: 50%; background: #222; border: 3px solid #1a6bb5; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #1a6bb5; flex-shrink: 0; }
     .main-page { height: 100vh; overflow-y: auto; padding-top: 64px; padding-bottom: 68px; }
     .relacje-row { display: flex; gap: 12px; overflow-x: auto; padding: 12px 16px 8px; scrollbar-width: none; }
     .relacje-row::-webkit-scrollbar { display: none; }
-    .relacja-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; text-decoration: none; }
-    .relacja-ring { width: 64px; height: 64px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #2980b9, #1a5276); }
+    .relacja-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+    .relacja-ring { width: 64px; height: 64px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #1a6bb5, #0d4a8a); }
     .relacja-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
     .relacja-ring-placeholder { width: 100%; height: 100%; border-radius: 50%; background: #222; border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: white; }
     .relacja-nazwa { font-size: 11px; color: #aaa; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
@@ -239,20 +238,21 @@ STYLE = '''<style>
     .feed::-webkit-scrollbar { display: none; }
     .video-slide { height: calc(100vh - 60px); scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background: #000; }
     .video-slide video { height: 100%; max-width: calc((100vh - 60px) * 9 / 16); width: 100%; object-fit: cover; cursor: pointer; }
-    .repost-label { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; font-size: 12px; color: #aaa; white-space: nowrap; }
+    .repost-label { position: absolute; bottom: 110px; left: 16px; display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 20px; font-size: 11px; color: #aaa; white-space: nowrap; }
     .repost-label svg { width: 14px; height: 14px; }
-    .repost-label a { color: #2980b9; text-decoration: none; font-weight: 700; }
-    .video-overlay { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: calc((100vh - 60px) * 9 / 16); padding: 0 16px 0 16px; pointer-events: none; box-sizing: border-box; padding-right: 80px; }
+    .repost-label a { color: #1a6bb5; text-decoration: none; font-weight: 700; }
+    .video-overlay { position: absolute; bottom: 80px; left: 16px; right: 70px; pointer-events: none; }
+    @media (min-width: 601px) { .video-overlay { left: calc(50% - (100vh - 60px) * 9 / 32); right: calc(50% - (100vh - 60px) * 9 / 32 + 60px); } }
     .video-overlay-author { font-size: 16px; font-weight: 700; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
     .video-overlay-title { font-size: 14px; color: rgba(255,255,255,0.9); margin-top: 5px; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
-    .video-side-actions { position: absolute; bottom: 80px; display: flex; flex-direction: column; align-items: center; gap: 24px; left: calc(50% + (100vh - 60px) * 9 / 32 - 40px); }
-    @media (max-width: 600px) { .video-side-actions { left: auto; right: 10px; } .video-overlay { left: 16px; transform: none; width: auto; right: 80px; padding: 0; } }
+    .video-side-actions { position: absolute; bottom: 80px; right: 8px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+    @media (min-width: 601px) { .video-side-actions { right: calc(50% - (100vh - 60px) * 9 / 32 - 50px); } }
     .side-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; background: none; border: none; color: white; padding: 4px; }
     .side-count { font-size: 13px; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-weight: 700; }
-    .icon-heart { width: 48px; height: 48px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: transform 0.15s; }
-    .icon-comment { width: 46px; height: 46px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
-    .icon-share { width: 42px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
-    .icon-repost { width: 42px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: transform 0.15s; }
+    .icon-heart { width: 36px; height: 36px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: transform 0.15s; }
+    .icon-comment { width: 34px; height: 34px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+    .icon-share { width: 30px; height: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+    .icon-repost { width: 30px; height: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: transform 0.15s; }
     .pause-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0; transition: opacity 0.2s; pointer-events: none; background: rgba(0,0,0,0.4); border-radius: 50%; padding: 16px; }
     .pause-indicator svg { width: 56px; height: 56px; }
     .pause-indicator.show { opacity: 1; }
@@ -266,16 +266,16 @@ STYLE = '''<style>
     .comments-scroll { flex: 1; overflow-y: auto; }
     .comment { background: #1a1a1a; border-radius: 12px; padding: 12px 14px; margin: 8px 0; }
     .comment.reply { margin-left: 24px; background: #161616; border-left: 3px solid #333; }
-    .comment-author { font-size: 13px; font-weight: 700; color: #2980b9; text-decoration: none; }
+    .comment-author { font-size: 13px; font-weight: 700; color: #1a6bb5; text-decoration: none; }
     .comment-text { font-size: 14px; color: #ddd; margin: 5px 0; line-height: 1.4; }
     .comment-actions { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
     .comment-like-btn { display: flex; align-items: center; gap: 5px; background: none; border: none; color: #666; font-size: 13px; cursor: pointer; padding: 4px; }
-    .comment-like-btn.liked { color: #2980b9; }
+    .comment-like-btn.liked { color: #1a6bb5; }
     .reply-toggle { background: none; border: none; color: #666; font-size: 13px; cursor: pointer; padding: 4px; }
     .comment-form { display: flex; gap: 8px; padding: 12px 0; background: #111; flex-shrink: 0; }
     .comment-form input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 24px; font-size: 14px; outline: none; }
-    .comment-form input:focus { border-color: #2980b9; }
-    .comment-form button { background: #2980b9; color: white; border: none; padding: 12px 18px; border-radius: 24px; cursor: pointer; font-size: 14px; font-weight: 700; }
+    .comment-form input:focus { border-color: #1a6bb5; }
+    .comment-form button { background: #1a6bb5; color: white; border: none; padding: 12px 18px; border-radius: 24px; cursor: pointer; font-size: 14px; font-weight: 700; }
     .reply-form { display: none; margin-top: 8px; }
     .reply-form.active { display: flex; gap: 8px; }
     .reply-form input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 10px 14px; border-radius: 20px; font-size: 13px; outline: none; }
@@ -283,23 +283,23 @@ STYLE = '''<style>
     .share-panel { display: none; position: fixed; bottom: 60px; left: 0; right: 0; background: #111; border-radius: 20px 20px 0 0; z-index: 200; padding: 16px; }
     .share-panel.open { display: block; }
     .share-link { background: #222; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #aaa; word-break: break-all; margin-bottom: 12px; }
-    .share-copy-btn { width: 100%; background: #2980b9; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .share-copy-btn { width: 100%; background: #1a6bb5; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .overlay-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; }
     .overlay-backdrop.open { display: block; }
-    .relacja-viewer { display: none; position: fixed; inset: 0; background: #000; z-index: 500; flex-direction: column; }
+    .relacja-viewer { display: none; position: fixed; inset: 0; background: #000; z-index: 500; flex-direction: column; align-items: center; justify-content: center; }
     .relacja-viewer.open { display: flex; }
-    .relacja-viewer-img { flex: 1; object-fit: contain; width: 100%; }
+    .relacja-viewer-img { max-height: 100vh; max-width: 100vw; object-fit: contain; }
     .relacja-viewer-header { position: absolute; top: 0; left: 0; right: 0; padding: 50px 16px 16px; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); display: flex; align-items: center; gap: 12px; z-index: 10; }
-    .relacja-viewer-opis { position: absolute; bottom: 80px; left: 16px; right: 16px; font-size: 15px; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
-    .relacja-viewer-close { position: absolute; top: 50px; right: 16px; background: rgba(0,0,0,0.5); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 11; }
-    .relacja-progress { position: absolute; top: 44px; left: 8px; right: 8px; height: 2px; background: rgba(255,255,255,0.3); border-radius: 2px; z-index: 11; }
-    .relacja-progress-fill { height: 100%; background: white; border-radius: 2px; transition: width linear; }
+    .relacja-viewer-opis { position: absolute; bottom: 80px; left: 16px; right: 16px; font-size: 15px; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.9); text-align: center; }
+    .relacja-viewer-close { position: absolute; top: 50px; right: 16px; background: rgba(0,0,0,0.6); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 11; }
+    .relacja-progress { position: absolute; top: 44px; left: 8px; right: 8px; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; z-index: 11; }
+    .relacja-progress-fill { height: 100%; background: white; border-radius: 2px; width: 0%; }
     .search-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .search-box { max-width: 600px; margin: 20px auto; padding: 0 16px; }
     .search-input-wrap { display: flex; gap: 10px; }
     .search-input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 14px 18px; border-radius: 24px; font-size: 15px; outline: none; }
-    .search-input:focus { border-color: #2980b9; }
-    .search-btn { background: #2980b9; color: white; border: none; padding: 14px 22px; border-radius: 24px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .search-input:focus { border-color: #1a6bb5; }
+    .search-btn { background: #1a6bb5; color: white; border: none; padding: 14px 22px; border-radius: 24px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .search-section { max-width: 600px; margin: 0 auto; padding: 0 16px 40px; }
     .search-section h3 { font-size: 15px; color: #888; margin: 20px 0 12px; }
     .user-row { display: flex; align-items: center; gap: 12px; background: #111; border-radius: 12px; padding: 12px 16px; margin: 8px 0; text-decoration: none; color: white; }
@@ -320,66 +320,66 @@ STYLE = '''<style>
     .stat-num { font-size: 17px; font-weight: 700; }
     .stat-label { font-size: 11px; color: #aaa; }
     .edit-btn { background: #222; color: white; border: 1px solid #444; padding: 9px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px; margin-right: 8px; }
-    .follow-btn { background: #2980b9; color: white; border: none; padding: 9px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px; font-weight: 700; }
+    .follow-btn { background: #1a6bb5; color: white; border: none; padding: 9px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px; font-weight: 700; }
     .follow-btn.following { background: #333; color: white; border: 1px solid #555; }
     .msg-btn { background: #222; color: white; border: 1px solid #444; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px; margin-left: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
     .profile-tabs { max-width: 600px; margin: 0 auto; display: flex; border-bottom: 1px solid #222; }
     .profile-tab { flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
-    .profile-tab.active { color: white; border-bottom-color: #2980b9; }
+    .profile-tab.active { color: white; border-bottom-color: #1a6bb5; }
     .profile-grid { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding-bottom: 40px; }
     .profile-grid-item { position: relative; aspect-ratio: 9/16; background: #111; cursor: pointer; overflow: hidden; border-radius: 8px; border: 1px solid #222; display: block; }
     .profile-grid-item video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     .grid-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7)); }
     .grid-title { font-size: 11px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .grid-delete { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); border: none; color: #2980b9; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .grid-delete { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); border: none; color: #1a6bb5; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .grid-delete svg { width: 16px; height: 16px; }
-    .repost-badge { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); border-radius: 10px; padding: 3px 7px; font-size: 10px; color: #2980b9; font-weight: 700; }
+    .repost-badge { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); border-radius: 10px; padding: 3px 7px; font-size: 10px; color: #1a6bb5; font-weight: 700; }
     .upload-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .upload-box { background: #111; border: 2px dashed #333; border-radius: 16px; padding: 24px; max-width: 500px; margin: 24px auto; text-align: center; }
     .upload-box input[type=text], .upload-box textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-bottom: 12px; outline: none; }
     .upload-box textarea { height: 80px; resize: none; }
     .file-input { display: none; }
     .file-label { display: inline-flex; align-items: center; gap: 8px; background: #222; color: #aaa; padding: 12px 22px; border-radius: 12px; cursor: pointer; font-size: 14px; margin-bottom: 8px; border: 1px solid #333; }
-    .upload-btn { background: #2980b9; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; width: 100%; }
+    .upload-btn { background: #1a6bb5; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; width: 100%; }
     .upload-btn:disabled { background: #555; cursor: not-allowed; }
     .limit-info { color: #888; font-size: 13px; margin-top: 10px; }
-    .limit-warn { color: #2980b9; font-size: 14px; }
+    .limit-warn { color: #1a6bb5; font-size: 14px; }
     .select-style { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-bottom: 12px; outline: none; appearance: none; }
     .tabs-dodaj { display: flex; gap: 0; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
     .tab-dodaj { flex: 1; padding: 12px; text-align: center; background: #1a1a1a; color: #666; cursor: pointer; font-size: 14px; font-weight: 600; border: none; display: flex; align-items: center; justify-content: center; }
-    .tab-dodaj.active { background: #2980b9; color: white; }
+    .tab-dodaj.active { background: #1a6bb5; color: white; }
     .center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; overflow-y: auto; }
     .card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 36px; width: 100%; max-width: 380px; }
     .card input { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin: 6px 0; outline: none; }
-    .card input:focus { border-color: #2980b9; }
-    .btn { width: 100%; background: #2980b9; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+    .card input:focus { border-color: #1a6bb5; }
+    .btn { width: 100%; background: #1a6bb5; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px; }
     .divider { border: none; border-top: 1px solid #222; margin: 20px 0; }
-    .link { color: #2980b9; text-decoration: none; font-weight: 600; }
-    .error { color: #2980b9; font-size: 14px; margin: 8px 0; text-align: center; }
+    .link { color: #1a6bb5; text-decoration: none; font-weight: 600; }
+    .error { color: #e74c3c; font-size: 14px; margin: 8px 0; text-align: center; }
     h2 { color: white; font-size: 22px; font-weight: 700; margin: 12px 0 20px; text-align: center; }
     p.sub { color: #888; font-size: 14px; margin-top: 20px; text-align: center; }
     .edit-form { max-width: 500px; margin: 30px auto; padding: 28px; background: #111; border-radius: 16px; }
     .edit-form input[type=text], .edit-form textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin: 6px 0 14px; outline: none; }
     .edit-form textarea { height: 100px; resize: none; }
     .edit-form label { color: #aaa; font-size: 13px; }
-    .save-btn { background: #2980b9; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .save-btn { background: #1a6bb5; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .notif-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .notif-list { max-width: 600px; margin: 20px auto; padding: 0 16px 40px; }
     .notif-item { background: #111; border-radius: 12px; padding: 14px 16px; margin: 10px 0; display: flex; align-items: center; gap: 12px; }
-    .notif-item.unread { border-left: 3px solid #2980b9; }
+    .notif-item.unread { border-left: 3px solid #1a6bb5; }
     .notif-text { font-size: 14px; color: #ddd; line-height: 1.4; }
-    .notif-text b { color: #2980b9; }
+    .notif-text b { color: #1a6bb5; }
     .notif-time { font-size: 12px; color: #555; margin-top: 4px; }
     .admin-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .admin-panel { max-width: 600px; margin: 20px auto; padding: 0 16px 40px; }
     .admin-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
     .admin-card h3 { font-size: 16px; margin-bottom: 12px; color: #aaa; }
     .toggle-btn { padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; }
-    .toggle-on { background: #2980b9; color: white; }
+    .toggle-on { background: #1a6bb5; color: white; }
     .toggle-off { background: #333; color: #aaa; }
     .film-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; }
     .film-row:last-child { border-bottom: none; }
-    .delete-btn { background: #1a1a1a; color: #2980b9; border: 1px solid #2980b9; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .delete-btn { background: #1a1a1a; color: #1a6bb5; border: 1px solid #1a6bb5; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
     .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(50,50,50,0.95); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
     .toast.show { opacity: 1; }
     .empty { text-align: center; padding: 60px 20px; color: #444; font-size: 18px; line-height: 1.6; }
@@ -391,7 +391,7 @@ STYLE = '''<style>
     .chat-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .chat-list { max-width: 600px; margin: 0 auto; padding: 16px 16px 40px; }
     .chat-row { display: flex; align-items: center; gap: 14px; background: #111; border-radius: 14px; padding: 14px 16px; margin: 8px 0; text-decoration: none; color: white; position: relative; }
-    .chat-row.unread { border-left: 3px solid #2980b9; }
+    .chat-row.unread { border-left: 3px solid #1a6bb5; }
     .chat-row-info { flex: 1; min-width: 0; }
     .chat-row-name { font-size: 15px; font-weight: 700; }
     .chat-row-preview { font-size: 13px; color: #666; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -400,7 +400,7 @@ STYLE = '''<style>
     .prosba-card { background: #111; border: 1px solid #333; border-radius: 14px; padding: 16px; margin: 10px 0; }
     .prosba-msg { font-size: 14px; color: #ddd; margin: 10px 0; padding: 10px 14px; background: #1a1a1a; border-radius: 10px; }
     .prosba-btns { display: flex; gap: 10px; margin-top: 12px; }
-    .akceptuj-btn { background: #2980b9; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; flex: 1; }
+    .akceptuj-btn { background: #1a6bb5; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; flex: 1; }
     .odrzuc-btn { background: #333; color: #aaa; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; flex: 1; }
     .conv-page { height: 100vh; display: flex; flex-direction: column; }
     .conv-header { padding: 12px 16px; background: #111; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #222; padding-top: 56px; flex-shrink: 0; }
@@ -409,7 +409,7 @@ STYLE = '''<style>
     .conv-back svg { width: 24px; height: 24px; }
     .conv-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
     .msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; position: relative; word-break: break-word; margin-bottom: 8px; }
-    .msg-bubble.sent { background: #2980b9; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg-bubble.sent { background: #1a6bb5; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
     .msg-bubble.received { background: #222; color: white; align-self: flex-start; border-bottom-left-radius: 4px; }
     .msg-bubble img { max-width: 200px; border-radius: 12px; display: block; }
     .msg-time { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: right; }
@@ -417,8 +417,8 @@ STYLE = '''<style>
     .msg-reakcja.left { right: auto; left: 8px; }
     .conv-input-bar { padding: 10px 12px; background: #111; border-top: 1px solid #222; display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
     .conv-input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 24px; font-size: 14px; outline: none; min-width: 0; }
-    .conv-input:focus { border-color: #2980b9; }
-    .conv-send-btn { background: #2980b9; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .conv-input:focus { border-color: #1a6bb5; }
+    .conv-send-btn { background: #1a6bb5; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .conv-send-btn svg { width: 20px; height: 20px; }
     .conv-img-btn { background: #222; border: 1px solid #333; color: white; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .conv-img-btn svg { width: 20px; height: 20px; }
@@ -427,11 +427,11 @@ STYLE = '''<style>
     .reakcja-opt { font-size: 24px; cursor: pointer; padding: 4px; }
     .prosba-send-box { background: #111; border-radius: 16px; padding: 20px; max-width: 500px; margin: 20px auto; }
     .prosba-send-box textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 12px; font-size: 14px; outline: none; resize: none; height: 80px; margin: 10px 0; }
-    .prosba-send-btn { background: #2980b9; color: white; border: none; padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
+    .prosba-send-btn { background: #1a6bb5; color: white; border: none; padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
 </style>'''
 
 def heart_svg(liked):
-    fill = "#2980b9" if liked else "white"
+    fill = "#1a6bb5" if liked else "white"
     return '<svg class="icon-heart" viewBox="0 0 24 24"><path fill="' + fill + '" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'
 
 def comment_svg():
@@ -441,7 +441,7 @@ def share_svg():
     return '<svg class="icon-share" viewBox="0 0 24 24"><path fill="white" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>'
 
 def repost_svg(reposted):
-    fill = "#2980b9" if reposted else "white"
+    fill = "#1a6bb5" if reposted else "white"
     return '<svg class="icon-repost" viewBox="0 0 24 24"><path fill="' + fill + '" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>'
 
 def build_feed(conn, uzytkownik):
@@ -482,13 +482,13 @@ def render_komentarze(conn, film_id, uzytkownik):
         for odp in odpowiedzi:
             lok = conn.execute("SELECT COUNT(*) as c FROM lajki_komentarzy WHERE komentarz_id=?", (odp['id'],)).fetchone()['c']
             czy_lok = conn.execute("SELECT 1 FROM lajki_komentarzy WHERE komentarz_id=? AND uzytkownik=?", (odp['id'], uzytkownik)).fetchone()
-            lf = "#2980b9" if czy_lok else "#666"
+            lf = "#1a6bb5" if czy_lok else "#666"
             odp_html += ('<div class="comment reply"><a href="/profil/' + odp['uzytkownik'] + '" class="comment-author">@' + odp['uzytkownik'] + '</a>'
                 '<p class="comment-text">' + odp['tresc'] + '</p>'
                 '<div class="comment-actions"><button class="comment-like-btn ' + ('liked' if czy_lok else '') + '" onclick="lajkujKomentarz(' + str(odp['id']) + ',this)">'
                 '<svg width="16" height="16" viewBox="0 0 24 24"><path fill="' + lf + '" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'
                 ' ' + str(lok) + '</button></div></div>')
-        kf = "#2980b9" if czy_lk else "#666"
+        kf = "#1a6bb5" if czy_lk else "#666"
         html += ('<div class="comment" id="kom-' + str(kom['id']) + '"><a href="/profil/' + kom['uzytkownik'] + '" class="comment-author">@' + kom['uzytkownik'] + '</a>'
             '<p class="comment-text">' + kom['tresc'] + '</p>'
             '<div class="comment-actions"><button class="comment-like-btn ' + ('liked' if czy_lk else '') + '" onclick="lajkujKomentarz(' + str(kom['id']) + ',this)">'
@@ -519,17 +519,17 @@ def get_relacje_html(conn, uzytkownik):
     html = '<div class="relacje-row">'
     wlasna = relacje_per_autor.get(uzytkownik)
     if wlasna:
-        html += ('<div class="relacja-item" onclick="pokazRelacje(' + str(wlasna['id']) + ')">'
+        html += ('<div class="relacja-item" onclick="pokazRelacje(' + str(wlasna['id']) + ')" style="cursor:pointer;">'
                  '<div class="relacja-ring">' + avatar_html(uzytkownik, 'relacja') + '</div>'
                  '<span class="relacja-nazwa">Ty</span></div>')
     else:
         html += ('<a href="/dodaj#relacja" class="relacja-item" style="text-decoration:none;">'
-                 '<div class="relacja-dodaj"><svg viewBox="0 0 24 24" style="width:28px;height:28px;"><path fill="#2980b9" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>'
+                 '<div class="relacja-dodaj"><svg viewBox="0 0 24 24" style="width:28px;height:28px;"><path fill="#1a6bb5" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>'
                  '<span class="relacja-nazwa" style="color:#aaa;">Dodaj</span></a>')
     for autor in obserwowani:
         r = relacje_per_autor.get(autor)
         if r:
-            html += ('<div class="relacja-item" onclick="pokazRelacje(' + str(r['id']) + ')">'
+            html += ('<div class="relacja-item" onclick="pokazRelacje(' + str(r['id']) + ')" style="cursor:pointer;">'
                      '<div class="relacja-ring">' + avatar_html(autor, 'relacja') + '</div>'
                      '<span class="relacja-nazwa">@' + autor + '</span></div>')
     html += '</div>'
@@ -561,7 +561,7 @@ def strona_glowna():
     import json
     relacje_json = json.dumps(relacje_data)
     close_svg = '<svg viewBox="0 0 24 24" style="width:20px;height:20px;"><path fill="white" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>'
-    return ('<!DOCTYPE html><html><head><title>OlivoVid</title><meta name="viewport" content="width=device-width, initial-scale=1">'
+    return ('<!DOCTYPE html><html><head><title>Scroll</title><meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>'
             + top_nav_html(uzytkownik) +
             '<div class="main-page">'
@@ -582,23 +582,31 @@ def strona_glowna():
             'const relacje=' + relacje_json + ';'
             'let relTimer=null;'
             'function pokazRelacje(id){'
-            'const r=relacje.find(x=>x.id===id);if(!r)return;'
-            'document.getElementById("relImg").src="/relacja_img/"+r.plik;'
-            'document.getElementById("relOpis").textContent=r.opis;'
-            'document.getElementById("relHeader").innerHTML=\'<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid white;"><img src="/avatar/\'+r.autor+\'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'"></div><span style="font-weight:700;margin-left:10px;">@\'+r.autor+\'</span>\';'
-            'document.getElementById("relViewer").classList.add("open");'
+            'const r=relacje.find(x=>x.id===id);'
+            'if(!r){console.log("nie znaleziono relacji",id);return;}'
+            'const viewer=document.getElementById("relViewer");'
+            'const img=document.getElementById("relImg");'
+            'const opis=document.getElementById("relOpis");'
+            'const header=document.getElementById("relHeader");'
+            'img.src="/relacja_img/"+r.plik;'
+            'opis.textContent=r.opis;'
+            'header.innerHTML=\'<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid white;margin-right:10px;"><img src="/avatar/\'+r.autor+\'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'"></div><span style="font-weight:700;">@\'+r.autor+\'</span>\';'
+            'viewer.classList.add("open");'
             'if(window.relAudio){window.relAudio.pause();window.relAudio=null;}'
-            'if(r.audio){window.relAudio=new Audio("/relacja_img/"+r.audio);window.relAudio.loop=true;window.relAudio.play();}'
+            'if(r.audio){window.relAudio=new Audio("/relacja_img/"+r.audio);window.relAudio.loop=true;window.relAudio.play().catch(()=>{});}'
             'const prog=document.getElementById("relProgress");'
-            'prog.style.width="0%";prog.style.transition="none";'
-            'setTimeout(()=>{prog.style.transition="width 5s linear";prog.style.width="100%";},50);'
-            'if(relTimer)clearTimeout(relTimer);relTimer=setTimeout(zamknijRelacje,5000);}'
+            'prog.style.transition="none";prog.style.width="0%";'
+            'setTimeout(function(){prog.style.transition="width 5s linear";prog.style.width="100%";},100);'
+            'if(relTimer)clearTimeout(relTimer);'
+            'relTimer=setTimeout(zamknijRelacje,5000);'
+            '}'
             'function zamknijRelacje(){'
             'document.getElementById("relViewer").classList.remove("open");'
             'if(relTimer)clearTimeout(relTimer);'
             'document.getElementById("relProgress").style.width="0%";'
-            'if(window.relAudio){window.relAudio.pause();window.relAudio=null;}}'
-            'function pokazToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000);}'
+            'if(window.relAudio){window.relAudio.pause();window.relAudio=null;}'
+            '}'
+            'function pokazToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},2000);}'
             '</script>'
             '</body></html>')
 
@@ -655,38 +663,38 @@ def filmy_page():
     if not filmy_html:
         filmy_html = '<div class="video-slide"><p class="empty">Brak filmow</p></div>'
     js = '''<script>
-    function pokazToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+    function pokazToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2000);}
     const slides=document.querySelectorAll('.video-slide');
-    const observer=new IntersectionObserver((e)=>{e.forEach(e=>{const v=e.target.querySelector('video');if(!v)return;if(e.isIntersecting)v.play();else{v.pause();v.currentTime=0;}});},{threshold:0.7});
-    slides.forEach(s=>observer.observe(s));
-    slides.forEach(slide=>{const video=slide.querySelector('video');const id=slide.id.replace('slide-','');const ind=document.getElementById('pause-'+id);
+    const observer=new IntersectionObserver(function(e){e.forEach(function(e){const v=e.target.querySelector('video');if(!v)return;if(e.isIntersecting)v.play();else{v.pause();v.currentTime=0;}});},{threshold:0.7});
+    slides.forEach(function(s){observer.observe(s);});
+    slides.forEach(function(slide){const video=slide.querySelector('video');const id=slide.id.replace('slide-','');const ind=document.getElementById('pause-'+id);
         if(video){video.addEventListener('click',function(e){if(e.target.closest('.video-side-actions')||e.target.closest('.video-overlay'))return;
-            if(video.paused){video.play();ind.classList.remove('show');}else{video.pause();ind.classList.add('show');setTimeout(()=>ind.classList.remove('show'),800);}});}});
+            if(video.paused){video.play();ind.classList.remove('show');}else{video.pause();ind.classList.add('show');setTimeout(function(){ind.classList.remove('show');},800);}});}});
     document.addEventListener('keydown',function(e){if(e.code==='Space'&&e.target.tagName!=='INPUT'){e.preventDefault();
-        const v=Array.from(slides).find(s=>{const r=s.getBoundingClientRect();return r.top>=-50&&r.top<=50;});
+        const v=Array.from(slides).find(function(s){const r=s.getBoundingClientRect();return r.top>=-50&&r.top<=50;});
         if(v){const vid=v.querySelector('video');const id=v.id.replace('slide-','');const ind=document.getElementById('pause-'+id);
-            if(vid.paused){vid.play();ind.classList.remove('show');}else{vid.pause();ind.classList.add('show');setTimeout(()=>ind.classList.remove('show'),800);}}}});
-    slides.forEach(slide=>{let last=0;slide.addEventListener('touchend',function(e){
+            if(vid.paused){vid.play();ind.classList.remove('show');}else{vid.pause();ind.classList.add('show');setTimeout(function(){ind.classList.remove('show');},800);}}}});
+    slides.forEach(function(slide){let last=0;slide.addEventListener('touchend',function(e){
         if(e.target.closest('.video-side-actions')||e.target.closest('.comments-panel')||e.target.closest('.share-panel'))return;
         const now=Date.now();if(now-last<300){const id=slide.id.replace('slide-','');lajkuj(parseInt(id),document.getElementById('like-'+id));}last=now;});});
-    function lajkuj(fid,btn){fetch('/lajkuj/'+fid,{method:'POST'}).then(r=>r.json()).then(d=>{document.getElementById('like-count-'+fid).textContent=d.lajki;btn.querySelector('path').setAttribute('fill',d.lajkuje?'#2980b9':'white');});}
-    function repostuj(fid,btn){fetch('/repostuj/'+fid,{method:'POST'}).then(r=>r.json()).then(d=>{document.getElementById('repost-count-'+fid).textContent=d.reposty;btn.querySelector('path').setAttribute('fill',d.repostuje?'#2980b9':'white');pokazToast(d.repostuje?'Repostowano!':'Usunieto repost');});}
+    function lajkuj(fid,btn){fetch('/lajkuj/'+fid,{method:'POST'}).then(function(r){return r.json();}).then(function(d){document.getElementById('like-count-'+fid).textContent=d.lajki;btn.querySelector('path').setAttribute('fill',d.lajkuje?'#1a6bb5':'white');});}
+    function repostuj(fid,btn){fetch('/repostuj/'+fid,{method:'POST'}).then(function(r){return r.json();}).then(function(d){document.getElementById('repost-count-'+fid).textContent=d.reposty;btn.querySelector('path').setAttribute('fill',d.repostuje?'#1a6bb5':'white');pokazToast(d.repostuje?'Repostowano!':'Usunieto repost');});}
     function toggleKomentarze(fid){document.getElementById('panel-'+fid).classList.toggle('open');document.getElementById('backdrop-'+fid).classList.toggle('open');}
     function pokazUdostepnij(fid){document.getElementById('share-'+fid).classList.add('open');document.getElementById('backdrop-'+fid).classList.add('open');}
     function zamknijWszystko(fid){document.getElementById('panel-'+fid).classList.remove('open');document.getElementById('share-'+fid).classList.remove('open');document.getElementById('backdrop-'+fid).classList.remove('open');}
-    function kopiujLink(url,fid){navigator.clipboard.writeText(url).then(()=>pokazToast('Link skopiowany!'));zamknijWszystko(fid);}
-    function lajkujKomentarz(kid,btn){fetch('/lajkuj_komentarz/'+kid,{method:'POST'}).then(r=>r.json()).then(d=>{btn.querySelector('path').setAttribute('fill',d.lajkuje?'#2980b9':'#666');btn.childNodes[2].textContent=' '+d.lajki;btn.classList.toggle('liked',d.lajkuje);});}
+    function kopiujLink(url,fid){navigator.clipboard.writeText(url).then(function(){pokazToast('Link skopiowany!');});zamknijWszystko(fid);}
+    function lajkujKomentarz(kid,btn){fetch('/lajkuj_komentarz/'+kid,{method:'POST'}).then(function(r){return r.json();}).then(function(d){btn.querySelector('path').setAttribute('fill',d.lajkuje?'#1a6bb5':'#666');btn.childNodes[2].textContent=' '+d.lajki;btn.classList.toggle('liked',d.lajkuje);});}
     function wyslijKomentarz(fid){const inp=document.getElementById('kom-input-'+fid);if(!inp.value.trim())return;
-        fetch('/komentarz/'+fid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tresc:inp.value})}).then(r=>r.json()).then(d=>{
+        fetch('/komentarz/'+fid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tresc:inp.value})}).then(function(r){return r.json();}).then(function(d){
             document.getElementById('komentarze-'+fid).insertAdjacentHTML('beforeend','<div class="comment" id="kom-'+d.id+'"><a href="/profil/'+d.uzytkownik+'" class="comment-author">@'+d.uzytkownik+'</a><p class="comment-text">'+d.tresc+'</p><div class="comment-actions"><button class="comment-like-btn" onclick="lajkujKomentarz('+d.id+',this)"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#666" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 0</button><button class="reply-toggle" onclick="pokazOdpowiedz('+d.id+')">Odpowiedz</button></div><div class="reply-form" id="reply-'+d.id+'"><input type="text" placeholder="Odpowiedz..." id="reply-input-'+d.id+'"><button onclick="wyslijOdpowiedz('+fid+','+d.id+')">Wyslij</button></div></div>');
             inp.value='';});}
     function pokazOdpowiedz(kid){document.getElementById('reply-'+kid).classList.toggle('active');}
     function wyslijOdpowiedz(fid,kid){const inp=document.getElementById('reply-input-'+kid);if(!inp.value.trim())return;
-        fetch('/komentarz/'+fid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tresc:inp.value,odpowiedz_na:kid})}).then(r=>r.json()).then(d=>{
+        fetch('/komentarz/'+fid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tresc:inp.value,odpowiedz_na:kid})}).then(function(r){return r.json();}).then(function(d){
             document.getElementById('kom-'+kid).insertAdjacentHTML('beforeend','<div class="comment reply"><a href="/profil/'+d.uzytkownik+'" class="comment-author">@'+d.uzytkownik+'</a><p class="comment-text">'+d.tresc+'</p></div>');
             inp.value='';document.getElementById('reply-'+kid).classList.remove('active');});}
     </script>'''
-    return ('<!DOCTYPE html><html><head><title>Filmy - OlivoVid</title><meta name="viewport" content="width=device-width, initial-scale=1">'
+    return ('<!DOCTYPE html><html><head><title>Filmy - Scroll</title><meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>'
             + '<div class="feed">' + filmy_html + '</div>'
             + bottom_nav_html('filmy', uzytkownik)
@@ -720,7 +728,7 @@ def dodaj_page():
     film_svg = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;margin-right:6px;"><path fill="currentColor" d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>'
     img_svg = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;margin-right:6px;"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'
     music_svg = '<svg viewBox="0 0 24 24" style="width:20px;height:20px;"><path fill="#aaa" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>'
-    return ('<!DOCTYPE html><html><head><title>Dodaj - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>Dodaj - Scroll</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="upload-page"><div class="upload-box">'
@@ -843,7 +851,7 @@ def wiadomosci():
             '<p class="chat-row-preview ' + ('unread-text' if nieprzeczytane else '') + '">' + preview + '</p></div>'
             '<span class="chat-row-time">' + (ost['data'][11:16] if ost else '') + '</span></a>')
     conn.close()
-    return ('<!DOCTYPE html><html><head><title>Wiadomosci - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>Wiadomosci - Scroll</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
             '<div class="chat-page"><div class="chat-list"><h2>Wiadomosci</h2>'
@@ -851,7 +859,7 @@ def wiadomosci():
             + (rozm_html if rozm_html else '<p style="color:#555;text-align:center;padding:40px;">Brak wiadomosci</p>')
             + '</div></div>'
             + bottom_nav_html('wiad', uzytkownik) +
-            '<script>function odpowiedzProsbie(id,status){fetch("/odpowiedz_prosbie/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:status})}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}</script>'
+            '<script>function odpowiedzProsbie(id,status){fetch("/odpowiedz_prosbie/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:status})}).then(function(r){return r.json();}).then(function(d){if(d.ok)location.reload();});}</script>'
             '</body></html>')
 
 @app.route("/odpowiedz_prosbie/<int:pid>", methods=["POST"])
@@ -912,15 +920,15 @@ def chat(rozmowca):
                     '<div class="upload-page"><div style="max-width:500px;margin:40px auto;padding:0 16px;text-align:center;">'
                     '<p style="color:#aaa;font-size:16px;">Prosba wyslana do @' + rozmowca + '</p>'
                     '<p style="color:#555;font-size:14px;margin-top:8px;">Poczekaj az zaakceptuje</p>'
-                    '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#2980b9;text-decoration:none;">Wróć</a>'
+                    '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#1a6bb5;text-decoration:none;">Wróć</a>'
                     '</div></div>' + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
         elif prosba and prosba['status'] == 'odrzucona':
             conn.close()
             return ('<!DOCTYPE html><html><head><title>Chat</title><meta name="viewport" content="width=device-width, initial-scale=1">'
                     + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
                     '<div class="upload-page"><div style="max-width:500px;margin:40px auto;padding:0 16px;text-align:center;">'
-                    '<p style="color:#2980b9;font-size:16px;">@' + rozmowca + ' odrzucil Twoja prosbe</p>'
-                    '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#2980b9;text-decoration:none;">Wróć</a>'
+                    '<p style="color:#1a6bb5;font-size:16px;">@' + rozmowca + ' odrzucil Twoja prosbe</p>'
+                    '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#1a6bb5;text-decoration:none;">Wróć</a>'
                     '</div></div>' + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
         else:
             conn.close()
@@ -934,7 +942,7 @@ def chat(rozmowca):
                     '</div></div>'
                     '<script>function wyslijProsbe(){const msg=document.getElementById("prosba-msg").value.trim();if(!msg)return;'
                     'fetch("/wyslij_prosbe/' + rozmowca + '",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wiadomosc:msg})})'
-                    '.then(r=>r.json()).then(d=>{if(d.ok)location.reload();else alert(d.error||"Blad");});}</script>'
+                    '.then(function(r){return r.json();}).then(function(d){if(d.ok)location.reload();else alert(d.error||"Blad");});}</script>'
                     + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
     wiad = conn.execute(
         "SELECT * FROM wiadomosci WHERE (od=? AND do=?) OR (od=? AND do=?) ORDER BY data ASC",
@@ -995,20 +1003,20 @@ def chat(rozmowca):
             'msgs.scrollTop=msgs.scrollHeight;'
             'function wyslijWiad(){const inp=document.getElementById("msg-input");if(!inp.value.trim())return;const txt=inp.value;inp.value="";'
             'fetch("/wyslij_wiad",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({do:rozmowca,tresc:txt})})'
-            '.then(r=>r.json()).then(d=>{msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble sent\' id=\'msg-"+d.id+"\'><span>"+d.tresc+"</span><div class=\'msg-time\'>"+d.czas+"</div></div>");msgs.scrollTop=msgs.scrollHeight;lastId=Math.max(lastId,d.id);});}'
+            '.then(function(r){return r.json();}).then(function(d){msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble sent\' id=\'msg-"+d.id+"\'><span>"+d.tresc+"</span><div class=\'msg-time\'>"+d.czas+"</div></div>");msgs.scrollTop=msgs.scrollHeight;lastId=Math.max(lastId,d.id);});}'
             'function wyslijZdjecie(inp){if(!inp.files[0])return;const fd=new FormData();fd.append("zdjecie",inp.files[0]);fd.append("do",rozmowca);'
-            'fetch("/wyslij_zdjecie",{method:"POST",body:fd}).then(r=>r.json()).then(d=>{msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble sent\'><img src=\'/chat_img/"+d.nazwa+"\'><div class=\'msg-time\'>"+d.czas+"</div></div>");msgs.scrollTop=msgs.scrollHeight;});}'
+            'fetch("/wyslij_zdjecie",{method:"POST",body:fd}).then(function(r){return r.json();}).then(function(d){msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble sent\'><img src=\'/chat_img/"+d.nazwa+"\'><div class=\'msg-time\'>"+d.czas+"</div></div>");msgs.scrollTop=msgs.scrollHeight;});}'
             'function pokazPicker(id){currentMsgId=id;document.getElementById("picker").classList.add("open");}'
             'document.addEventListener("click",function(e){if(!e.target.closest(".reakcja-picker")&&!e.target.closest(".msg-reakcja"))document.getElementById("picker").classList.remove("open");});'
-            'function dajReakcje(id,emoji){fetch("/reakcja/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reakcja:emoji})}).then(r=>r.json()).then(()=>{const el=document.getElementById("msg-"+id);if(el){let r=el.querySelector(".msg-reakcja");if(r)r.textContent=emoji;else el.insertAdjacentHTML("beforeend","<span class=\'msg-reakcja left\'>"+emoji+"</span>");}document.getElementById("picker").classList.remove("open");});}'
-            'function pollChat(){fetch("/poll_chat/"+rozmowca+"?od="+lastId).then(r=>r.json()).then(d=>{const typing=d.pisze;let tInd=document.getElementById("typing-ind");'
+            'function dajReakcje(id,emoji){fetch("/reakcja/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reakcja:emoji})}).then(function(r){return r.json();}).then(function(){const el=document.getElementById("msg-"+id);if(el){let r=el.querySelector(".msg-reakcja");if(r)r.textContent=emoji;else el.insertAdjacentHTML("beforeend","<span class=\'msg-reakcja left\'>"+emoji+"</span>");}document.getElementById("picker").classList.remove("open");});}'
+            'function pollChat(){fetch("/poll_chat/"+rozmowca+"?od="+lastId).then(function(r){return r.json();}).then(function(d){const typing=d.pisze;let tInd=document.getElementById("typing-ind");'
             'if(typing&&!tInd){msgs.insertAdjacentHTML("beforeend","<div id=\'typing-ind\' class=\'msg-bubble received\' style=\'padding:10px 16px;\'><span class=\'typing-dots\'><span></span><span></span><span></span></span></div>");msgs.scrollTop=msgs.scrollHeight;}'
             'else if(!typing&&tInd)tInd.remove();'
-            'd.wiad.forEach(w=>{if(!document.getElementById("msg-"+w.id)){let t=w.typ==="zdjecie"?"<img src=\'/chat_img/"+w.tresc+"\' style=\'max-width:200px;border-radius:12px;\'>":w.tresc;'
+            'd.wiad.forEach(function(w){if(!document.getElementById("msg-"+w.id)){let t=w.typ==="zdjecie"?"<img src=\'/chat_img/"+w.tresc+"\' style=\'max-width:200px;border-radius:12px;\'>":w.tresc;'
             'msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble received\' id=\'msg-"+w.id+"\'><span>"+t+"</span><div class=\'msg-time\'>"+w.data.slice(11,16)+"</div></div>");'
             'msgs.scrollTop=msgs.scrollHeight;lastId=Math.max(lastId,w.id);}});});}'
             'setInterval(pollChat,2000);'
-            'document.getElementById("msg-input").addEventListener("input",function(){fetch("/pisze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({do:rozmowca,pisze:this.value.length>0});});});'
+            'document.getElementById("msg-input").addEventListener("input",function(){fetch("/pisze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({do:rozmowca,pisze:this.value.length>0})});});'
             '</script></body></html>')
 
 @app.route("/wyslij_wiad", methods=["POST"])
@@ -1135,7 +1143,7 @@ def profil(nazwa):
         fid = str(film['id'])
         if jest_swoj and not is_repost:
             usun = ('<button class="grid-delete" onclick="usunSwojFilm(event,' + fid + ')">'
-                    '<svg viewBox="0 0 24 24"><path fill="#2980b9" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>')
+                    '<svg viewBox="0 0 24 24"><path fill="#1a6bb5" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>')
         else:
             usun = ''
         badge = '<span class="repost-badge">RP</span>' if is_repost else ''
@@ -1157,7 +1165,7 @@ def profil(nazwa):
                       + '<a href="/chat/' + nazwa + '" class="msg-btn">' + msg_svg_btn + 'Napisz</a>')
 
     aktywna_nav = 'profil' if jest_swoj else ''
-    return ('<!DOCTYPE html><html><head><title>@' + nazwa + ' - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>@' + nazwa + ' - Scroll</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="profile-page"><div class="profile-header"><div class="profile-top">'
@@ -1180,9 +1188,9 @@ def profil(nazwa):
             '</div></div>'
             + bottom_nav_html(aktywna_nav, session['uzytkownik']) +
             '<script>'
-            'function pokazTab(tab,el){document.getElementById("tab-filmy").style.display=tab==="filmy"?"grid":"none";document.getElementById("tab-reposty").style.display=tab==="reposty"?"grid":"none";document.querySelectorAll(".profile-tab").forEach(t=>t.classList.remove("active"));el.classList.add("active");}'
-            'function toggleObserwuj(nazwa){fetch("/obserwuj/"+nazwa,{method:"POST"}).then(r=>r.json()).then(d=>{const btn=document.getElementById("follow-btn");btn.textContent=d.obserwuje?"Obserwujesz":"Obserwuj";btn.className="follow-btn"+(d.obserwuje?" following":"");document.getElementById("obserwujacych-count").textContent=d.obserwujacych;});}'
-            'function usunSwojFilm(e,fid){e.stopPropagation();e.preventDefault();if(!confirm("Usunac ten film?"))return;fetch("/usun_film/"+fid,{method:"POST"}).then(r=>r.json()).then(d=>{if(d.ok)document.getElementById("film-"+fid).remove();});}'
+            'function pokazTab(tab,el){document.getElementById("tab-filmy").style.display=tab==="filmy"?"grid":"none";document.getElementById("tab-reposty").style.display=tab==="reposty"?"grid":"none";document.querySelectorAll(".profile-tab").forEach(function(t){t.classList.remove("active");});el.classList.add("active");}'
+            'function toggleObserwuj(nazwa){fetch("/obserwuj/"+nazwa,{method:"POST"}).then(function(r){return r.json();}).then(function(d){const btn=document.getElementById("follow-btn");btn.textContent=d.obserwuje?"Obserwujesz":"Obserwuj";btn.className="follow-btn"+(d.obserwuje?" following":"");document.getElementById("obserwujacych-count").textContent=d.obserwujacych;});}'
+            'function usunSwojFilm(e,fid){e.stopPropagation();e.preventDefault();if(!confirm("Usunac ten film?"))return;fetch("/usun_film/"+fid,{method:"POST"}).then(function(r){return r.json();}).then(function(d){if(d.ok)document.getElementById("film-"+fid).remove();});}'
             '</script></body></html>')
 
 @app.route("/szukaj")
@@ -1202,7 +1210,7 @@ def szukaj():
                 '<div class="user-info"><p class="user-name">@' + u['nazwa'] + '</p><p class="user-bio">' + (u['bio'] or 'Brak opisu') + '</p></div></a>')
         for film in filmy:
             filmy_html += ('<a href="/ogladaj/' + str(film['id']) + '" class="video-row">'
-                '<div class="video-thumb"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#2980b9" d="M8 5v14l11-7z"/></svg></div>'
+                '<div class="video-thumb"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#1a6bb5" d="M8 5v14l11-7z"/></svg></div>'
                 '<div><p class="video-row-title">' + film['tytul'] + '</p><p class="video-row-author">@' + film['autor'] + '</p></div></a>')
     wyniki = ""
     if query:
@@ -1211,7 +1219,7 @@ def szukaj():
         if not wyniki: wyniki = '<p style="color:#555;text-align:center;padding:40px;">Brak wynikow</p>'
     else:
         wyniki = '<p style="color:#555;text-align:center;padding:40px;">Wpisz czego szukasz</p>'
-    return ('<!DOCTYPE html><html><head><title>Szukaj - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>Szukaj - Scroll</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="search-page"><div class="search-box"><form method="GET" action="/szukaj"><div class="search-input-wrap">'
@@ -1265,7 +1273,7 @@ def powiadomienia():
         notifs_html += ('<div class="notif-item ' + ('unread' if not n['przeczytane'] else '') + '">'
             + avatar_html(n['od'], 'sm') +
             '<div><p class="notif-text">' + tekst + '</p><p class="notif-time">' + n['data'][:16] + '</p></div></div>')
-    return ('<!DOCTYPE html><html><head><title>Powiadomienia - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>Powiadomienia - Scroll</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="notif-page"><div class="notif-list"><h2>Powiadomienia</h2>'
@@ -1292,9 +1300,9 @@ def upload():
     plik.seek(0)
     if rozmiar > 50 * 1024 * 1024:
         return ('<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">'
-                + STYLE + '</head><body><div class="center"><p style="color:#2980b9;font-size:18px;">Plik za duzy! Max 50MB.</p>'
-                '<a href="/dodaj" style="color:#2980b9;margin-top:20px;display:block;">Wróć</a></div></body></html>')
-    wynik = cloudinary.uploader.upload(plik, resource_type="video", folder="olivovid",
+                + STYLE + '</head><body><div class="center"><p style="color:#1a6bb5;font-size:18px;">Plik za duzy! Max 50MB.</p>'
+                '<a href="/dodaj" style="color:#1a6bb5;margin-top:20px;display:block;">Wróć</a></div></body></html>')
+    wynik = cloudinary.uploader.upload(plik, resource_type="video", folder="Scroll",
                                         transformation=[{"width": 1080, "height": 1920, "crop": "fill", "gravity": "center"},
                                                         {"duration": 60}])
     conn = get_db()
@@ -1337,7 +1345,7 @@ def admin():
         filmy_html += ('<div class="film-row"><div><p style="font-weight:700;">' + film['tytul'] + '</p>'
             '<p style="color:#888;font-size:13px;">@' + film['autor'] + ' - ' + film['data'][:10] + '</p></div>'
             '<button class="delete-btn" onclick="usunFilm(' + str(film['id']) + ')">Usun</button></div>')
-    return ('<!DOCTYPE html><html><head><title>Admin - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>Admin - Scroll</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="admin-page"><div class="admin-panel"><h2>Panel Admina</h2>'
@@ -1348,8 +1356,8 @@ def admin():
             + (filmy_html or '<p style="color:#555;">Brak filmow</p>') + '</div></div></div>'
             + bottom_nav_html('', session['uzytkownik']) +
             '<script>'
-            'function toggleWgrywanie(){fetch("/admin/toggle_wgrywanie",{method:"POST"}).then(r=>r.json()).then(d=>{const b=document.getElementById("toggleBtn");b.textContent=d.aktywne?"Wlaczone":"Wylaczone";b.className="toggle-btn "+(d.aktywne?"toggle-on":"toggle-off");});}'
-            'function usunFilm(fid){if(!confirm("Usunac ten film?"))return;fetch("/admin/usun_film/"+fid,{method:"POST"}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}'
+            'function toggleWgrywanie(){fetch("/admin/toggle_wgrywanie",{method:"POST"}).then(function(r){return r.json();}).then(function(d){const b=document.getElementById("toggleBtn");b.textContent=d.aktywne?"Wlaczone":"Wylaczone";b.className="toggle-btn "+(d.aktywne?"toggle-on":"toggle-off");});}'
+            'function usunFilm(fid){if(!confirm("Usunac ten film?"))return;fetch("/admin/usun_film/"+fid,{method:"POST"}).then(function(r){return r.json();}).then(function(d){if(d.ok)location.reload();});}'
             '</script></body></html>')
 
 @app.route("/admin/toggle_wgrywanie", methods=["POST"])
@@ -1459,7 +1467,7 @@ def edytuj_profil():
         return redirect(url_for('profil', nazwa=session['uzytkownik']))
     user = conn.execute("SELECT * FROM uzytkownicy WHERE nazwa=?", (session['uzytkownik'],)).fetchone()
     conn.close()
-    return ('<!DOCTYPE html><html><head><title>Edytuj profil - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>Edytuj profil - Scroll</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="upload-page"><div style="max-width:500px;margin:20px auto;padding:0 16px;">'
@@ -1500,10 +1508,10 @@ def logowanie():
             return redirect(url_for('strona_glowna'))
         error = "Bledny login lub haslo!"
     err_html = "<p class='error'>" + error + "</p>" if error else ""
-    return ('<!DOCTYPE html><html><head><title>OlivoVid - Logowanie</title>'
+    return ('<!DOCTYPE html><html><head><title>Scroll - Logowanie</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body><div class="center"><div class="card">'
-            '<div style="text-align:center;margin-bottom:8px;" class="logo">Olivo<span>Vid</span></div>'
+            '<div style="text-align:center;margin-bottom:8px;font-size:26px;font-weight:900;color:white;">Scroll</div>'
             '<h2>Zaloguj sie</h2><form method="POST">'
             '<input type="text" name="nazwa" placeholder="Nazwa uzytkownika" required>'
             '<input type="password" name="haslo" placeholder="Haslo" required>'
@@ -1532,10 +1540,10 @@ def rejestracja():
                 conn.close()
                 error = "Ta nazwa uzytkownika jest zajeta!"
     err_html = "<p class='error'>" + error + "</p>" if error else ""
-    return ('<!DOCTYPE html><html><head><title>OlivoVid - Rejestracja</title>'
+    return ('<!DOCTYPE html><html><head><title>Scroll - Rejestracja</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body><div class="center"><div class="card">'
-            '<div style="text-align:center;margin-bottom:8px;" class="logo">Olivo<span>Vid</span></div>'
+            '<div style="text-align:center;margin-bottom:8px;font-size:26px;font-weight:900;color:white;">Scroll</div>'
             '<h2>Utworz konto</h2><form method="POST">'
             '<input type="text" name="nazwa" placeholder="Nazwa uzytkownika" required>'
             '<input type="password" name="haslo" placeholder="Haslo" required>'
