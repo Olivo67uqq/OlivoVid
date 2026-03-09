@@ -146,18 +146,23 @@ def avatar_html(nazwa, size="sm"):
 def bottom_nav_html(aktywna, uzytkownik):
     m = ile_wiadomosci(uzytkownik)
     msg_badge = '<span class="bn-badge">' + str(m) + '</span>' if m > 0 else ''
-    ikony = [
-        ('/', 'home', aktywna == 'home', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>', ''),
-        ('/filmy', 'filmy', aktywna == 'filmy', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 6.47L5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4z"/></svg>', ''),
-        ('/dodaj', 'dodaj', aktywna == 'dodaj', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>', 'plus'),
-        ('/wiadomosci', 'wiad', aktywna == 'wiad', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>', msg_badge),
-        ('/profil/' + uzytkownik, 'profil', aktywna == 'profil', '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>', ''),
+    home_svg = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>'
+    filmy_svg = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>'
+    plus_svg = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>'
+    msg_svg = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>'
+    profil_svg = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>'
+    items = [
+        ('/', 'home', aktywna == 'home', home_svg, ''),
+        ('/filmy', 'filmy', aktywna == 'filmy', filmy_svg, ''),
+        ('/dodaj', 'dodaj', aktywna == 'dodaj', plus_svg, ''),
+        ('/wiadomosci', 'wiad', aktywna == 'wiad', msg_svg, msg_badge),
+        ('/profil/' + uzytkownik, 'profil', aktywna == 'profil', profil_svg, ''),
     ]
     html = '<div class="bottom-nav">'
-    for href, key, active, icon, badge in ikony:
+    for href, key, active, icon, badge in items:
         plus_cls = ' bn-plus' if key == 'dodaj' else ''
         active_cls = ' active' if active else ''
-        html += ('<a href="' + href + '" class="bn-item' + active_cls + plus_cls + '">'
+        html += ('<a href="' + href + '" class="bn-item' + active_cls + plus_cls + '" style="text-decoration:none;">'
                  + icon + badge + '</a>')
     html += '</div>'
     return html
@@ -165,12 +170,15 @@ def bottom_nav_html(aktywna, uzytkownik):
 def top_nav_html(uzytkownik):
     n = ile_powiadomien(uzytkownik)
     notif_badge = '<span class="notif-badge">' + str(n) + '</span>' if n > 0 else ''
-    admin_link = '<a href="/admin" class="nav-icon-btn"><svg viewBox="0 0 24 24"><path fill="white" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></a>' if is_admin() else ''
+    admin_svg = '<svg viewBox="0 0 24 24"><path fill="white" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+    admin_link = '<a href="/admin" class="nav-icon-btn">' + admin_svg + '</a>' if is_admin() else ''
+    search_svg = '<svg viewBox="0 0 24 24"><path fill="white" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>'
+    bell_svg = '<svg viewBox="0 0 24 24"><path fill="white" d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>'
     return ('''<div class="nav">
         <a href="/" style="text-decoration:none;" class="logo">Olivo<span>Vid</span></a>
         <div class="nav-right">
-            <a href="/szukaj" class="nav-icon-btn"><svg viewBox="0 0 24 24"><path fill="white" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></a>
-            <a href="/powiadomienia" class="nav-icon-btn" style="position:relative;"><svg viewBox="0 0 24 24"><path fill="white" d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>''' + notif_badge + '''</a>
+            <a href="/szukaj" class="nav-icon-btn">''' + search_svg + '''</a>
+            <a href="/powiadomienia" class="nav-icon-btn" style="position:relative;">''' + bell_svg + notif_badge + '''</a>
             ''' + admin_link + '''
         </div>
     </div>''')
@@ -179,46 +187,48 @@ STYLE = '''<style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: white; overflow: hidden; }
     .logo { font-size: 22px; font-weight: 900; color: white; letter-spacing: -1px; }
-    .logo span { color: #fe2c55; }
+    .logo span { color: #9b59b6; }
     .nav { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.0)); }
     .nav-right { display: flex; align-items: center; gap: 6px; }
     .nav-icon-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.1); color: white; text-decoration: none; position: relative; }
     .nav-icon-btn svg { width: 22px; height: 22px; }
-    .notif-badge { position: absolute; top: 4px; right: 4px; background: #fe2c55; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #000; border-top: 1px solid #222; display: flex; align-items: center; justify-content: space-around; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-    .bn-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; text-decoration: none; width: 48px; height: 48px; border-radius: 50%; position: relative; transition: color 0.15s; }
+    .notif-badge { position: absolute; top: 4px; right: 4px; background: #9b59b6; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #000; border-top: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-around; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+    .bn-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #555; text-decoration: none; width: 48px; height: 48px; border-radius: 50%; position: relative; transition: color 0.15s; }
     .bn-item svg { width: 26px; height: 26px; }
     .bn-item.active { color: white; }
-    .bn-item.bn-plus { background: #fe2c55; color: white; width: 48px; height: 48px; border-radius: 14px; }
+    .bn-item.bn-plus { background: #9b59b6; color: white; width: 48px; height: 48px; border-radius: 14px; }
     .bn-item.bn-plus svg { width: 28px; height: 28px; }
-    .bn-badge { position: absolute; top: 4px; right: 4px; background: #fe2c55; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fe2c55; }
-    .avatar-sm-placeholder { width: 32px; height: 32px; border-radius: 50%; background: #333; border: 2px solid #fe2c55; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fe2c55; flex-shrink: 0; }
-    .avatar-lg { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #fe2c55; }
-    .avatar-lg-placeholder { width: 76px; height: 76px; border-radius: 50%; background: #222; border: 3px solid #fe2c55; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #fe2c55; flex-shrink: 0; }
+    .bn-badge { position: absolute; top: 4px; right: 4px; background: #9b59b6; color: white; font-size: 9px; font-weight: 700; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #9b59b6; flex-shrink: 0; }
+    .avatar-sm-placeholder { width: 32px; height: 32px; border-radius: 50%; background: #333; border: 2px solid #9b59b6; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #9b59b6; flex-shrink: 0; }
+    .avatar-lg { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #9b59b6; }
+    .avatar-lg-placeholder { width: 76px; height: 76px; border-radius: 50%; background: #222; border: 3px solid #9b59b6; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #9b59b6; flex-shrink: 0; }
     .main-page { height: 100vh; overflow-y: auto; padding-top: 64px; padding-bottom: 68px; }
-    .relacje-row { display: flex; gap: 12px; overflow-x: auto; padding: 12px 16px; scrollbar-width: none; }
+    .relacje-row { display: flex; gap: 12px; overflow-x: auto; padding: 12px 16px 8px; scrollbar-width: none; }
     .relacje-row::-webkit-scrollbar { display: none; }
-    .relacja-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
-    .relacja-ring { width: 64px; height: 64px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #fe2c55, #ff9f43); }
-    .relacja-ring.widziana { background: #333; }
+    .relacja-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; text-decoration: none; }
+    .relacja-ring { width: 64px; height: 64px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #9b59b6, #6c3483); }
     .relacja-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
     .relacja-ring-placeholder { width: 100%; height: 100%; border-radius: 50%; background: #222; border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: white; }
     .relacja-nazwa { font-size: 11px; color: #aaa; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
     .relacja-dodaj { width: 64px; height: 64px; border-radius: 50%; background: #1a1a1a; border: 2px dashed #444; display: flex; align-items: center; justify-content: center; }
-    .relacja-dodaj svg { width: 28px; height: 28px; color: #fe2c55; }
-    .filmy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; padding: 2px; }
-    .film-card { position: relative; aspect-ratio: 9/16; background: #111; overflow: hidden; cursor: pointer; }
-    .film-card video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-    .film-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 10px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); }
-    .film-card-autor { font-size: 12px; color: #aaa; }
-    .film-card-tytul { font-size: 13px; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+    .relacja-dodaj svg { width: 28px; height: 28px; color: #9b59b6; }
+    .filmy-scroll-row { overflow-x: auto; scrollbar-width: none; padding: 8px 16px; display: flex; gap: 10px; }
+    .filmy-scroll-row::-webkit-scrollbar { display: none; }
+    .film-scroll-card { flex-shrink: 0; width: 120px; height: 200px; border-radius: 12px; background: #111; overflow: hidden; cursor: pointer; border: 1px solid #2a2a2a; position: relative; text-decoration: none; display: block; }
+    .film-scroll-card video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .film-scroll-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.85)); }
+    .film-scroll-autor { font-size: 10px; color: #aaa; }
+    .film-scroll-tytul { font-size: 11px; font-weight: 700; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .section-label { font-size: 13px; font-weight: 700; color: #888; padding: 8px 16px 4px; }
+    .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; padding-bottom: 60px; }
     .feed::-webkit-scrollbar { display: none; }
-    .video-slide { height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background: #000; }
-    .video-slide video { height: 100vh; width: 100%; object-fit: contain; cursor: pointer; }
+    .video-slide { height: calc(100vh - 60px); scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background: #000; }
+    .video-slide video { height: 100%; width: 100%; object-fit: contain; cursor: pointer; }
     .repost-label { position: absolute; top: 64px; left: 16px; display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; font-size: 12px; color: #aaa; }
-    .repost-label a { color: #fe2c55; text-decoration: none; font-weight: 700; }
+    .repost-label svg { width: 14px; height: 14px; }
+    .repost-label a { color: #9b59b6; text-decoration: none; font-weight: 700; }
     .video-overlay { position: absolute; bottom: 80px; left: 16px; right: 90px; pointer-events: none; }
     .video-overlay-author { font-size: 16px; font-weight: 700; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
     .video-overlay-title { font-size: 14px; color: rgba(255,255,255,0.9); margin-top: 5px; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
@@ -229,7 +239,6 @@ STYLE = '''<style>
     .icon-comment { width: 46px; height: 46px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
     .icon-share { width: 42px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
     .icon-repost { width: 42px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: transform 0.15s; }
-    .side-btn:active .icon-heart { transform: scale(1.3); }
     .pause-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0; transition: opacity 0.2s; pointer-events: none; background: rgba(0,0,0,0.4); border-radius: 50%; padding: 16px; }
     .pause-indicator svg { width: 56px; height: 56px; }
     .pause-indicator.show { opacity: 1; }
@@ -243,16 +252,16 @@ STYLE = '''<style>
     .comments-scroll { flex: 1; overflow-y: auto; }
     .comment { background: #1a1a1a; border-radius: 12px; padding: 12px 14px; margin: 8px 0; }
     .comment.reply { margin-left: 24px; background: #161616; border-left: 3px solid #333; }
-    .comment-author { font-size: 13px; font-weight: 700; color: #fe2c55; text-decoration: none; }
+    .comment-author { font-size: 13px; font-weight: 700; color: #9b59b6; text-decoration: none; }
     .comment-text { font-size: 14px; color: #ddd; margin: 5px 0; line-height: 1.4; }
     .comment-actions { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
     .comment-like-btn { display: flex; align-items: center; gap: 5px; background: none; border: none; color: #666; font-size: 13px; cursor: pointer; padding: 4px; }
-    .comment-like-btn.liked { color: #fe2c55; }
+    .comment-like-btn.liked { color: #9b59b6; }
     .reply-toggle { background: none; border: none; color: #666; font-size: 13px; cursor: pointer; padding: 4px; }
     .comment-form { display: flex; gap: 8px; padding: 12px 0; background: #111; flex-shrink: 0; }
     .comment-form input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 24px; font-size: 14px; outline: none; }
-    .comment-form input:focus { border-color: #fe2c55; }
-    .comment-form button { background: #fe2c55; color: white; border: none; padding: 12px 18px; border-radius: 24px; cursor: pointer; font-size: 14px; font-weight: 700; }
+    .comment-form input:focus { border-color: #9b59b6; }
+    .comment-form button { background: #9b59b6; color: white; border: none; padding: 12px 18px; border-radius: 24px; cursor: pointer; font-size: 14px; font-weight: 700; }
     .reply-form { display: none; margin-top: 8px; }
     .reply-form.active { display: flex; gap: 8px; }
     .reply-form input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 10px 14px; border-radius: 20px; font-size: 13px; outline: none; }
@@ -260,7 +269,7 @@ STYLE = '''<style>
     .share-panel { display: none; position: fixed; bottom: 60px; left: 0; right: 0; background: #111; border-radius: 20px 20px 0 0; z-index: 200; padding: 16px; }
     .share-panel.open { display: block; }
     .share-link { background: #222; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #aaa; word-break: break-all; margin-bottom: 12px; }
-    .share-copy-btn { width: 100%; background: #fe2c55; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .share-copy-btn { width: 100%; background: #9b59b6; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .overlay-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; }
     .overlay-backdrop.open { display: block; }
     .relacja-viewer { display: none; position: fixed; inset: 0; background: #000; z-index: 500; flex-direction: column; }
@@ -275,8 +284,8 @@ STYLE = '''<style>
     .search-box { max-width: 600px; margin: 20px auto; padding: 0 16px; }
     .search-input-wrap { display: flex; gap: 10px; }
     .search-input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 14px 18px; border-radius: 24px; font-size: 15px; outline: none; }
-    .search-input:focus { border-color: #fe2c55; }
-    .search-btn { background: #fe2c55; color: white; border: none; padding: 14px 22px; border-radius: 24px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .search-input:focus { border-color: #9b59b6; }
+    .search-btn { background: #9b59b6; color: white; border: none; padding: 14px 22px; border-radius: 24px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .search-section { max-width: 600px; margin: 0 auto; padding: 0 16px 40px; }
     .search-section h3 { font-size: 15px; color: #888; margin: 20px 0 12px; }
     .user-row { display: flex; align-items: center; gap: 12px; background: #111; border-radius: 12px; padding: 12px 16px; margin: 8px 0; text-decoration: none; color: white; }
@@ -297,66 +306,66 @@ STYLE = '''<style>
     .stat-num { font-size: 17px; font-weight: 700; }
     .stat-label { font-size: 11px; color: #aaa; }
     .edit-btn { background: #222; color: white; border: 1px solid #444; padding: 9px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px; margin-right: 8px; }
-    .follow-btn { background: #fe2c55; color: white; border: none; padding: 9px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px; font-weight: 700; }
+    .follow-btn { background: #9b59b6; color: white; border: none; padding: 9px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px; font-weight: 700; }
     .follow-btn.following { background: #333; color: white; border: 1px solid #555; }
     .msg-btn { background: #222; color: white; border: 1px solid #444; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 10px; margin-left: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
     .profile-tabs { max-width: 600px; margin: 0 auto; display: flex; border-bottom: 1px solid #222; }
     .profile-tab { flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
-    .profile-tab.active { color: white; border-bottom-color: #fe2c55; }
+    .profile-tab.active { color: white; border-bottom-color: #9b59b6; }
     .profile-grid { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding-bottom: 40px; }
     .profile-grid-item { position: relative; aspect-ratio: 9/16; background: #111; cursor: pointer; overflow: hidden; border-radius: 8px; border: 1px solid #222; display: block; }
     .profile-grid-item video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     .grid-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7)); }
     .grid-title { font-size: 11px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .grid-delete { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); border: none; color: #fe2c55; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .grid-delete { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); border: none; color: #9b59b6; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .grid-delete svg { width: 16px; height: 16px; }
-    .repost-badge { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); border-radius: 10px; padding: 3px 7px; font-size: 10px; color: #fe2c55; font-weight: 700; }
+    .repost-badge { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.6); border-radius: 10px; padding: 3px 7px; font-size: 10px; color: #9b59b6; font-weight: 700; }
     .upload-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .upload-box { background: #111; border: 2px dashed #333; border-radius: 16px; padding: 24px; max-width: 500px; margin: 24px auto; text-align: center; }
     .upload-box input[type=text], .upload-box textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-bottom: 12px; outline: none; }
     .upload-box textarea { height: 80px; resize: none; }
     .file-input { display: none; }
     .file-label { display: inline-flex; align-items: center; gap: 8px; background: #222; color: #aaa; padding: 12px 22px; border-radius: 12px; cursor: pointer; font-size: 14px; margin-bottom: 8px; border: 1px solid #333; }
-    .upload-btn { background: #fe2c55; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; width: 100%; }
+    .upload-btn { background: #9b59b6; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; width: 100%; }
     .upload-btn:disabled { background: #555; cursor: not-allowed; }
     .limit-info { color: #888; font-size: 13px; margin-top: 10px; }
-    .limit-warn { color: #fe2c55; font-size: 14px; }
+    .limit-warn { color: #9b59b6; font-size: 14px; }
     .select-style { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin-bottom: 12px; outline: none; appearance: none; }
     .tabs-dodaj { display: flex; gap: 0; margin-bottom: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
     .tab-dodaj { flex: 1; padding: 12px; text-align: center; background: #1a1a1a; color: #666; cursor: pointer; font-size: 14px; font-weight: 600; border: none; }
-    .tab-dodaj.active { background: #fe2c55; color: white; }
+    .tab-dodaj.active { background: #9b59b6; color: white; }
     .center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; overflow-y: auto; }
     .card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 36px; width: 100%; max-width: 380px; }
     .card input { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin: 6px 0; outline: none; }
-    .card input:focus { border-color: #fe2c55; }
-    .btn { width: 100%; background: #fe2c55; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+    .card input:focus { border-color: #9b59b6; }
+    .btn { width: 100%; background: #9b59b6; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 12px; }
     .divider { border: none; border-top: 1px solid #222; margin: 20px 0; }
-    .link { color: #fe2c55; text-decoration: none; font-weight: 600; }
-    .error { color: #fe2c55; font-size: 14px; margin: 8px 0; text-align: center; }
+    .link { color: #9b59b6; text-decoration: none; font-weight: 600; }
+    .error { color: #9b59b6; font-size: 14px; margin: 8px 0; text-align: center; }
     h2 { color: white; font-size: 22px; font-weight: 700; margin: 12px 0 20px; text-align: center; }
     p.sub { color: #888; font-size: 14px; margin-top: 20px; text-align: center; }
     .edit-form { max-width: 500px; margin: 30px auto; padding: 28px; background: #111; border-radius: 16px; }
     .edit-form input[type=text], .edit-form textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 14px 16px; border-radius: 12px; font-size: 15px; margin: 6px 0 14px; outline: none; }
     .edit-form textarea { height: 100px; resize: none; }
     .edit-form label { color: #aaa; font-size: 13px; }
-    .save-btn { background: #fe2c55; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .save-btn { background: #9b59b6; color: white; border: none; padding: 14px 32px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .notif-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .notif-list { max-width: 600px; margin: 20px auto; padding: 0 16px 40px; }
     .notif-item { background: #111; border-radius: 12px; padding: 14px 16px; margin: 10px 0; display: flex; align-items: center; gap: 12px; }
-    .notif-item.unread { border-left: 3px solid #fe2c55; }
+    .notif-item.unread { border-left: 3px solid #9b59b6; }
     .notif-text { font-size: 14px; color: #ddd; line-height: 1.4; }
-    .notif-text b { color: #fe2c55; }
+    .notif-text b { color: #9b59b6; }
     .notif-time { font-size: 12px; color: #555; margin-top: 4px; }
     .admin-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .admin-panel { max-width: 600px; margin: 20px auto; padding: 0 16px 40px; }
     .admin-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
     .admin-card h3 { font-size: 16px; margin-bottom: 12px; color: #aaa; }
     .toggle-btn { padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; }
-    .toggle-on { background: #fe2c55; color: white; }
+    .toggle-on { background: #9b59b6; color: white; }
     .toggle-off { background: #333; color: #aaa; }
     .film-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; }
     .film-row:last-child { border-bottom: none; }
-    .delete-btn { background: #1a1a1a; color: #fe2c55; border: 1px solid #fe2c55; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .delete-btn { background: #1a1a1a; color: #9b59b6; border: 1px solid #9b59b6; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
     .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(50,50,50,0.95); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
     .toast.show { opacity: 1; }
     .empty { text-align: center; padding: 60px 20px; color: #444; font-size: 18px; line-height: 1.6; }
@@ -368,7 +377,7 @@ STYLE = '''<style>
     .chat-page { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 68px; }
     .chat-list { max-width: 600px; margin: 0 auto; padding: 16px 16px 40px; }
     .chat-row { display: flex; align-items: center; gap: 14px; background: #111; border-radius: 14px; padding: 14px 16px; margin: 8px 0; text-decoration: none; color: white; position: relative; }
-    .chat-row.unread { border-left: 3px solid #fe2c55; }
+    .chat-row.unread { border-left: 3px solid #9b59b6; }
     .chat-row-info { flex: 1; min-width: 0; }
     .chat-row-name { font-size: 15px; font-weight: 700; }
     .chat-row-preview { font-size: 13px; color: #666; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -377,7 +386,7 @@ STYLE = '''<style>
     .prosba-card { background: #111; border: 1px solid #333; border-radius: 14px; padding: 16px; margin: 10px 0; }
     .prosba-msg { font-size: 14px; color: #ddd; margin: 10px 0; padding: 10px 14px; background: #1a1a1a; border-radius: 10px; }
     .prosba-btns { display: flex; gap: 10px; margin-top: 12px; }
-    .akceptuj-btn { background: #fe2c55; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; flex: 1; }
+    .akceptuj-btn { background: #9b59b6; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; flex: 1; }
     .odrzuc-btn { background: #333; color: #aaa; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; flex: 1; }
     .conv-page { height: 100vh; display: flex; flex-direction: column; }
     .conv-header { padding: 12px 16px; background: #111; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #222; padding-top: 56px; flex-shrink: 0; }
@@ -386,7 +395,7 @@ STYLE = '''<style>
     .conv-back svg { width: 24px; height: 24px; }
     .conv-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
     .msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; position: relative; word-break: break-word; margin-bottom: 8px; }
-    .msg-bubble.sent { background: #fe2c55; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg-bubble.sent { background: #9b59b6; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
     .msg-bubble.received { background: #222; color: white; align-self: flex-start; border-bottom-left-radius: 4px; }
     .msg-bubble img { max-width: 200px; border-radius: 12px; display: block; }
     .msg-time { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: right; }
@@ -394,8 +403,8 @@ STYLE = '''<style>
     .msg-reakcja.left { right: auto; left: 8px; }
     .conv-input-bar { padding: 10px 12px; background: #111; border-top: 1px solid #222; display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
     .conv-input { flex: 1; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 24px; font-size: 14px; outline: none; min-width: 0; }
-    .conv-input:focus { border-color: #fe2c55; }
-    .conv-send-btn { background: #fe2c55; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .conv-input:focus { border-color: #9b59b6; }
+    .conv-send-btn { background: #9b59b6; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .conv-send-btn svg { width: 20px; height: 20px; }
     .conv-img-btn { background: #222; border: 1px solid #333; color: white; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .conv-img-btn svg { width: 20px; height: 20px; }
@@ -404,11 +413,11 @@ STYLE = '''<style>
     .reakcja-opt { font-size: 24px; cursor: pointer; padding: 4px; }
     .prosba-send-box { background: #111; border-radius: 16px; padding: 20px; max-width: 500px; margin: 20px auto; }
     .prosba-send-box textarea { width: 100%; background: #222; border: 1px solid #333; color: white; padding: 12px 16px; border-radius: 12px; font-size: 14px; outline: none; resize: none; height: 80px; margin: 10px 0; }
-    .prosba-send-btn { background: #fe2c55; color: white; border: none; padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
+    .prosba-send-btn { background: #9b59b6; color: white; border: none; padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
 </style>'''
 
 def heart_svg(liked):
-    fill = "#fe2c55" if liked else "white"
+    fill = "#9b59b6" if liked else "white"
     return '<svg class="icon-heart" viewBox="0 0 24 24"><path fill="' + fill + '" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'
 
 def comment_svg():
@@ -418,7 +427,7 @@ def share_svg():
     return '<svg class="icon-share" viewBox="0 0 24 24"><path fill="white" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>'
 
 def repost_svg(reposted):
-    fill = "#fe2c55" if reposted else "white"
+    fill = "#9b59b6" if reposted else "white"
     return '<svg class="icon-repost" viewBox="0 0 24 24"><path fill="' + fill + '" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>'
 
 def build_feed(conn, uzytkownik):
@@ -459,13 +468,13 @@ def render_komentarze(conn, film_id, uzytkownik):
         for odp in odpowiedzi:
             lok = conn.execute("SELECT COUNT(*) as c FROM lajki_komentarzy WHERE komentarz_id=?", (odp['id'],)).fetchone()['c']
             czy_lok = conn.execute("SELECT 1 FROM lajki_komentarzy WHERE komentarz_id=? AND uzytkownik=?", (odp['id'], uzytkownik)).fetchone()
-            lf = "#fe2c55" if czy_lok else "#666"
+            lf = "#9b59b6" if czy_lok else "#666"
             odp_html += ('<div class="comment reply"><a href="/profil/' + odp['uzytkownik'] + '" class="comment-author">@' + odp['uzytkownik'] + '</a>'
                 '<p class="comment-text">' + odp['tresc'] + '</p>'
                 '<div class="comment-actions"><button class="comment-like-btn ' + ('liked' if czy_lok else '') + '" onclick="lajkujKomentarz(' + str(odp['id']) + ',this)">'
                 '<svg width="16" height="16" viewBox="0 0 24 24"><path fill="' + lf + '" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'
                 ' ' + str(lok) + '</button></div></div>')
-        kf = "#fe2c55" if czy_lk else "#666"
+        kf = "#9b59b6" if czy_lk else "#666"
         html += ('<div class="comment" id="kom-' + str(kom['id']) + '"><a href="/profil/' + kom['uzytkownik'] + '" class="comment-author">@' + kom['uzytkownik'] + '</a>'
             '<p class="comment-text">' + kom['tresc'] + '</p>'
             '<div class="comment-actions"><button class="comment-like-btn ' + ('liked' if czy_lk else '') + '" onclick="lajkujKomentarz(' + str(kom['id']) + ',this)">'
@@ -473,17 +482,15 @@ def render_komentarze(conn, film_id, uzytkownik):
             ' ' + str(lk) + '</button>'
             '<button class="reply-toggle" onclick="pokazOdpowiedz(' + str(kom['id']) + ')">Odpowiedz</button></div>'
             '<div class="reply-form" id="reply-' + str(kom['id']) + '">'
-            '<input type="text" placeholder="Odpowiedź..." id="reply-input-' + str(kom['id']) + '">'
-            '<button onclick="wyslijOdpowiedz(' + str(film_id) + ',' + str(kom['id']) + ')">Wyślij</button>'
+            '<input type="text" placeholder="Odpowiedz..." id="reply-input-' + str(kom['id']) + '">'
+            '<button onclick="wyslijOdpowiedz(' + str(film_id) + ',' + str(kom['id']) + ')">Wyslij</button>'
             '</div>' + odp_html + '</div>')
     return html
 
 def get_relacje_html(conn, uzytkownik):
     teraz = datetime.now().isoformat()
-    # Usuń wygasłe
     conn.execute("DELETE FROM relacje WHERE wygasa IS NOT NULL AND wygasa < ?", (teraz,))
     conn.commit()
-    # Pobierz relacje obserwowanych + własne
     obserwowani = [r['obserwowany'] for r in conn.execute(
         "SELECT obserwowany FROM obserwowania WHERE obserwujacy=?", (uzytkownik,)).fetchall()]
     autorzy = [uzytkownik] + obserwowani
@@ -496,16 +503,15 @@ def get_relacje_html(conn, uzytkownik):
         if r:
             relacje_per_autor[autor] = r
     html = '<div class="relacje-row">'
-    # Najpierw własna relacja / dodaj
     wlasna = relacje_per_autor.get(uzytkownik)
     if wlasna:
         html += ('<div class="relacja-item" onclick="pokazRelacje(' + str(wlasna['id']) + ')">'
                  '<div class="relacja-ring">' + avatar_html(uzytkownik, 'relacja') + '</div>'
                  '<span class="relacja-nazwa">Ty</span></div>')
     else:
-        html += ('<a href="/dodaj#relacja" class="relacja-item">'
-                 '<div class="relacja-dodaj"><svg viewBox="0 0 24 24"><path fill="#fe2c55" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>'
-                 '<span class="relacja-nazwa">Dodaj</span></a>')
+        html += ('<a href="/dodaj#relacja" class="relacja-item" style="text-decoration:none;">'
+                 '<div class="relacja-dodaj"><svg viewBox="0 0 24 24" style="width:28px;height:28px;"><path fill="#9b59b6" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>'
+                 '<span class="relacja-nazwa" style="color:#aaa;">Dodaj</span></a>')
     for autor in obserwowani:
         r = relacje_per_autor.get(autor)
         if r:
@@ -525,13 +531,12 @@ def strona_glowna():
     filmy = build_feed(conn, uzytkownik)
     filmy_html = ""
     for film in filmy:
-        filmy_html += ('<a href="/ogladaj/' + str(film['id']) + '" class="film-card">'
+        filmy_html += ('<a href="/ogladaj/' + str(film['id']) + '" class="film-scroll-card">'
             '<video preload="metadata" muted><source src="' + film['url'] + '"></video>'
-            '<div class="film-card-overlay">'
-            '<p class="film-card-autor">@' + film['autor'] + '</p>'
-            '<p class="film-card-tytul">' + film['tytul'] + '</p>'
+            '<div class="film-scroll-overlay">'
+            '<p class="film-scroll-autor">@' + film['autor'] + '</p>'
+            '<p class="film-scroll-tytul">' + film['tytul'] + '</p>'
             '</div></a>')
-    # Pobierz wszystkie relacje do viewera
     teraz = datetime.now().isoformat()
     wszystkie_relacje = conn.execute(
         "SELECT * FROM relacje WHERE wygasa IS NULL OR wygasa > ? ORDER BY data DESC", (teraz,)).fetchall()
@@ -541,18 +546,22 @@ def strona_glowna():
     conn.close()
     import json
     relacje_json = json.dumps(relacje_data)
+    play_svg = '<svg viewBox="0 0 24 24" style="width:20px;height:20px;"><path fill="#9b59b6" d="M8 5v14l11-7z"/></svg>'
     return ('<!DOCTYPE html><html><head><title>OlivoVid</title><meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>'
             + top_nav_html(uzytkownik) +
             '<div class="main-page">'
             + relacje_html +
-            '<div class="filmy-grid">' + (filmy_html if filmy_html else '<p class="empty" style="grid-column:1/-1;">Brak filmów</p>') + '</div>'
+            '<p class="section-label">Filmy dla Ciebie</p>'
+            '<div class="filmy-scroll-row">' + (filmy_html if filmy_html else '<p style="color:#555;padding:20px;">Brak filmow</p>') + '</div>'
             '</div>'
             + bottom_nav_html('home', uzytkownik) +
             '<div class="toast" id="toast"></div>'
             '<div class="relacja-viewer" id="relViewer">'
             '<div class="relacja-progress"><div class="relacja-progress-fill" id="relProgress"></div></div>'
-            '<button class="relacja-viewer-close" onclick="zamknijRelacje()">✕</button>'
+            '<button class="relacja-viewer-close" onclick="zamknijRelacje()">'
+            '<svg viewBox="0 0 24 24" style="width:20px;height:20px;"><path fill="white" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>'
+            '</button>'
             '<div class="relacja-viewer-header" id="relHeader"></div>'
             '<img class="relacja-viewer-img" id="relImg" src="" alt="">'
             '<p class="relacja-viewer-opis" id="relOpis"></p>'
@@ -564,18 +573,13 @@ def strona_glowna():
             'const r=relacje.find(x=>x.id===id);if(!r)return;'
             'document.getElementById("relImg").src="/relacja_img/"+r.plik;'
             'document.getElementById("relOpis").textContent=r.opis;'
-            'document.getElementById("relHeader").innerHTML=\'<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid white;">\'+\'<img src="/avatar/\'+r.autor+\'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">\'+\'</div><span style="font-weight:700;">@\'+r.autor+\'</span>\';'
+            'document.getElementById("relHeader").innerHTML=\'<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid white;"><img src="/avatar/\'+r.autor+\'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'"></div><span style="font-weight:700;margin-left:10px;">@\'+r.autor+\'</span>\';'
             'document.getElementById("relViewer").classList.add("open");'
             'const prog=document.getElementById("relProgress");'
             'prog.style.width="0%";prog.style.transition="none";'
             'setTimeout(()=>{prog.style.transition="width 5s linear";prog.style.width="100%";},50);'
-            'if(relTimer)clearTimeout(relTimer);relTimer=setTimeout(zamknijRelacje,5000);'
-            '}'
-            'function zamknijRelacje(){'
-            'document.getElementById("relViewer").classList.remove("open");'
-            'if(relTimer)clearTimeout(relTimer);'
-            'document.getElementById("relProgress").style.width="0%";'
-            '}'
+            'if(relTimer)clearTimeout(relTimer);relTimer=setTimeout(zamknijRelacje,5000);}'
+            'function zamknijRelacje(){document.getElementById("relViewer").classList.remove("open");if(relTimer)clearTimeout(relTimer);document.getElementById("relProgress").style.width="0%";}'
             'function pokazToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000);}'
             '</script>'
             '</body></html>')
@@ -604,7 +608,7 @@ def filmy_page():
         film_url = "https://olivovid.onrender.com/film/" + str(fid)
         repost_label = ""
         if repost_info:
-            repost_label = ('<div class="repost-label"><svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path fill="#aaa" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>'
+            repost_label = ('<div class="repost-label"><svg viewBox="0 0 24 24"><path fill="#aaa" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>'
                 'Repost od <a href="/profil/' + repost_info['uzytkownik'] + '">@' + repost_info['uzytkownik'] + '</a></div>')
         filmy_html += ('<div class="video-slide" id="slide-' + str(fid) + '">'
             '<video loop playsinline preload="metadata" id="video-' + str(fid) + '"><source src="' + film['url'] + '"></video>'
@@ -623,15 +627,15 @@ def filmy_page():
             '<div class="comments-panel" id="panel-' + str(fid) + '"><div class="panel-handle"></div><p class="panel-title">Komentarze</p>'
             '<div class="comments-scroll" id="komentarze-' + str(fid) + '">' + komentarze_html + '</div>'
             '<div class="comment-form"><input type="text" placeholder="Dodaj komentarz..." id="kom-input-' + str(fid) + '">'
-            '<button onclick="wyslijKomentarz(' + str(fid) + ')">Wyślij</button></div></div>'
-            '<div class="share-panel" id="share-' + str(fid) + '"><div class="panel-handle"></div><p class="panel-title">Udostępnij</p>'
+            '<button onclick="wyslijKomentarz(' + str(fid) + ')">Wyslij</button></div></div>'
+            '<div class="share-panel" id="share-' + str(fid) + '"><div class="panel-handle"></div><p class="panel-title">Udostepnij</p>'
             '<p class="share-link">' + film_url + '</p>'
             '<button class="share-copy-btn" onclick="kopiujLink(\'' + film_url + '\',' + str(fid) + ')">'
             '<svg width="20" height="20" viewBox="0 0 24 24"><path fill="white" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>'
             'Kopiuj link</button></div></div>')
     conn.close()
     if not filmy_html:
-        filmy_html = '<div class="video-slide"><p class="empty">Brak filmów</p></div>'
+        filmy_html = '<div class="video-slide"><p class="empty">Brak filmow</p></div>'
     js = '''<script>
     function pokazToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
     const slides=document.querySelectorAll('.video-slide');
@@ -647,16 +651,16 @@ def filmy_page():
     slides.forEach(slide=>{let last=0;slide.addEventListener('touchend',function(e){
         if(e.target.closest('.video-side-actions')||e.target.closest('.comments-panel')||e.target.closest('.share-panel'))return;
         const now=Date.now();if(now-last<300){const id=slide.id.replace('slide-','');lajkuj(parseInt(id),document.getElementById('like-'+id));}last=now;});});
-    function lajkuj(fid,btn){fetch('/lajkuj/'+fid,{method:'POST'}).then(r=>r.json()).then(d=>{document.getElementById('like-count-'+fid).textContent=d.lajki;btn.querySelector('path').setAttribute('fill',d.lajkuje?'#fe2c55':'white');});}
-    function repostuj(fid,btn){fetch('/repostuj/'+fid,{method:'POST'}).then(r=>r.json()).then(d=>{document.getElementById('repost-count-'+fid).textContent=d.reposty;btn.querySelector('path').setAttribute('fill',d.repostuje?'#fe2c55':'white');pokazToast(d.repostuje?'Repostowano!':'Usunięto repost');});}
+    function lajkuj(fid,btn){fetch('/lajkuj/'+fid,{method:'POST'}).then(r=>r.json()).then(d=>{document.getElementById('like-count-'+fid).textContent=d.lajki;btn.querySelector('path').setAttribute('fill',d.lajkuje?'#9b59b6':'white');});}
+    function repostuj(fid,btn){fetch('/repostuj/'+fid,{method:'POST'}).then(r=>r.json()).then(d=>{document.getElementById('repost-count-'+fid).textContent=d.reposty;btn.querySelector('path').setAttribute('fill',d.repostuje?'#9b59b6':'white');pokazToast(d.repostuje?'Repostowano!':'Usunieto repost');});}
     function toggleKomentarze(fid){document.getElementById('panel-'+fid).classList.toggle('open');document.getElementById('backdrop-'+fid).classList.toggle('open');}
     function pokazUdostepnij(fid){document.getElementById('share-'+fid).classList.add('open');document.getElementById('backdrop-'+fid).classList.add('open');}
     function zamknijWszystko(fid){document.getElementById('panel-'+fid).classList.remove('open');document.getElementById('share-'+fid).classList.remove('open');document.getElementById('backdrop-'+fid).classList.remove('open');}
     function kopiujLink(url,fid){navigator.clipboard.writeText(url).then(()=>pokazToast('Link skopiowany!'));zamknijWszystko(fid);}
-    function lajkujKomentarz(kid,btn){fetch('/lajkuj_komentarz/'+kid,{method:'POST'}).then(r=>r.json()).then(d=>{btn.querySelector('path').setAttribute('fill',d.lajkuje?'#fe2c55':'#666');btn.childNodes[2].textContent=' '+d.lajki;btn.classList.toggle('liked',d.lajkuje);});}
+    function lajkujKomentarz(kid,btn){fetch('/lajkuj_komentarz/'+kid,{method:'POST'}).then(r=>r.json()).then(d=>{btn.querySelector('path').setAttribute('fill',d.lajkuje?'#9b59b6':'#666');btn.childNodes[2].textContent=' '+d.lajki;btn.classList.toggle('liked',d.lajkuje);});}
     function wyslijKomentarz(fid){const inp=document.getElementById('kom-input-'+fid);if(!inp.value.trim())return;
         fetch('/komentarz/'+fid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tresc:inp.value})}).then(r=>r.json()).then(d=>{
-            document.getElementById('komentarze-'+fid).insertAdjacentHTML('beforeend','<div class="comment" id="kom-'+d.id+'"><a href="/profil/'+d.uzytkownik+'" class="comment-author">@'+d.uzytkownik+'</a><p class="comment-text">'+d.tresc+'</p><div class="comment-actions"><button class="comment-like-btn" onclick="lajkujKomentarz('+d.id+',this)"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#666" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 0</button><button class="reply-toggle" onclick="pokazOdpowiedz('+d.id+')">Odpowiedz</button></div><div class="reply-form" id="reply-'+d.id+'"><input type="text" placeholder="Odpowiedź..." id="reply-input-'+d.id+'"><button onclick="wyslijOdpowiedz('+fid+','+d.id+')">Wyślij</button></div></div>');
+            document.getElementById('komentarze-'+fid).insertAdjacentHTML('beforeend','<div class="comment" id="kom-'+d.id+'"><a href="/profil/'+d.uzytkownik+'" class="comment-author">@'+d.uzytkownik+'</a><p class="comment-text">'+d.tresc+'</p><div class="comment-actions"><button class="comment-like-btn" onclick="lajkujKomentarz('+d.id+',this)"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#666" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 0</button><button class="reply-toggle" onclick="pokazOdpowiedz('+d.id+')">Odpowiedz</button></div><div class="reply-form" id="reply-'+d.id+'"><input type="text" placeholder="Odpowiedz..." id="reply-input-'+d.id+'"><button onclick="wyslijOdpowiedz('+fid+','+d.id+')">Wyslij</button></div></div>');
             inp.value='';});}
     function pokazOdpowiedz(kid){document.getElementById('reply-'+kid).classList.toggle('active');}
     function wyslijOdpowiedz(fid,kid){const inp=document.getElementById('reply-input-'+kid);if(!inp.value.trim())return;
@@ -677,49 +681,47 @@ def dodaj_page():
     aktywne = wgrywanie_aktywne()
     fwm = filmy_w_tym_miesiacu(session['uzytkownik'])
     if not aktywne:
-        film_html = '<p class="limit-warn">Wgrywanie filmów jest tymczasowo wyłączone.</p>'
+        film_html = '<p class="limit-warn">Wgrywanie filmow jest tymczasowo wylaczone.</p>'
     elif fwm >= LIMIT_FILMOW_MIESIECZNIE:
-        film_html = '<p class="limit-warn">Osiągnąłeś limit filmów w tym miesiącu.</p>'
+        film_html = '<p class="limit-warn">Osiagnales limit filmow w tym miesiacu.</p>'
     else:
         pozostalo = LIMIT_FILMOW_MIESIECZNIE - fwm
         film_html = ('<form method="POST" action="/upload" enctype="multipart/form-data" id="uploadForm">'
-            '<input type="text" name="tytul" placeholder="Tytuł wideo" required style="width:100%;background:#222;border:1px solid #333;color:white;padding:14px 16px;border-radius:12px;font-size:15px;margin-bottom:12px;outline:none;">'
+            '<input type="text" name="tytul" placeholder="Tytul wideo" required style="width:100%;background:#222;border:1px solid #333;color:white;padding:14px 16px;border-radius:12px;font-size:15px;margin-bottom:12px;outline:none;">'
             '<label for="fileInput" class="file-label"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#aaa" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>Wybierz wideo</label>'
             '<input type="file" name="wideo" accept="video/*" class="file-input" id="fileInput" onchange="document.getElementById(\'fileName\').textContent=this.files[0].name">'
             '<p style="color:#555;font-size:13px;margin:8px 0;" id="fileName">Nie wybrano pliku</p>'
             '<button type="submit" class="upload-btn" id="uploadBtn">Wgraj wideo</button>'
-            '<p class="limit-info">Pozostało: <b>' + str(pozostalo) + '</b> / ' + str(LIMIT_FILMOW_MIESIECZNIE) + ' w tym miesiącu</p></form>')
+            '<p class="limit-info">Pozostalo: <b>' + str(pozostalo) + '</b> / ' + str(LIMIT_FILMOW_MIESIECZNIE) + ' w tym miesiacu</p></form>')
+    film_svg = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;margin-right:6px;"><path fill="currentColor" d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>'
+    img_svg = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;margin-right:6px;"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'
     return ('<!DOCTYPE html><html><head><title>Dodaj - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="upload-page"><div class="upload-box">'
             '<div class="tabs-dodaj">'
-            '<button class="tab-dodaj active" id="tab-film-btn" onclick="pokazTab(\'film\')">🎬 Film</button>'
-            '<button class="tab-dodaj" id="tab-relacja-btn" onclick="pokazTab(\'relacja\')">📸 Relacja</button>'
+            '<button class="tab-dodaj active" id="tab-film-btn" onclick="pokazTab(\'film\')" style="display:flex;align-items:center;justify-content:center;">' + film_svg + 'Film</button>'
+            '<button class="tab-dodaj" id="tab-relacja-btn" onclick="pokazTab(\'relacja\')" style="display:flex;align-items:center;justify-content:center;">' + img_svg + 'Relacja</button>'
             '</div>'
             '<div id="tab-film"><h2>Wgraj film</h2>' + film_html + '</div>'
-            '<div id="tab-relacja" style="display:none;"><h2>Dodaj relację</h2>'
+            '<div id="tab-relacja" style="display:none;"><h2>Dodaj relacje</h2>'
             '<form method="POST" action="/dodaj_relacje" enctype="multipart/form-data" id="relForm">'
-            '<label for="relFile" class="file-label"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#aaa" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>Wybierz zdjęcie</label>'
+            '<label for="relFile" class="file-label"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#aaa" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>Wybierz zdjecie</label>'
             '<input type="file" name="zdjecie" accept="image/*" class="file-input" id="relFile" onchange="document.getElementById(\'relFileName\').textContent=this.files[0].name" required>'
             '<p style="color:#555;font-size:13px;margin:8px 0;" id="relFileName">Nie wybrano pliku</p>'
             '<textarea name="opis" placeholder="Opis (opcjonalnie)..." style="width:100%;background:#222;border:1px solid #333;color:white;padding:12px 16px;border-radius:12px;font-size:14px;outline:none;resize:none;height:70px;margin-bottom:12px;"></textarea>'
-            '<select name="widocznosc" class="select-style"><option value="wszyscy">Wszyscy</option><option value="znajomi">Tylko obserwujący</option></select>'
+            '<select name="widocznosc" class="select-style"><option value="wszyscy">Wszyscy</option><option value="znajomi">Tylko obserwujacy</option></select>'
             '<select name="czas" class="select-style">'
-            '<option value="1">1 dzień</option><option value="2">2 dni</option>'
-            '<option value="7">Tydzień</option><option value="30">Miesiąc</option>'
+            '<option value="1">1 dzien</option><option value="2">2 dni</option>'
+            '<option value="7">Tydzien</option><option value="30">Miesiac</option>'
             '<option value="365">Rok</option><option value="0">Na zawsze</option>'
             '</select>'
-            '<button type="submit" class="upload-btn">Opublikuj relację</button>'
+            '<button type="submit" class="upload-btn">Opublikuj relacje</button>'
             '</form></div>'
             '</div></div>'
             '<script>'
             'document.getElementById("uploadForm")&&document.getElementById("uploadForm").addEventListener("submit",function(){const b=document.getElementById("uploadBtn");if(b){b.disabled=true;b.textContent="Wgrywanie...";}});'
-            'function pokazTab(t){'
-            'document.getElementById("tab-film").style.display=t==="film"?"block":"none";'
-            'document.getElementById("tab-relacja").style.display=t==="relacja"?"block":"none";'
-            'document.getElementById("tab-film-btn").className="tab-dodaj"+(t==="film"?" active":"");'
-            'document.getElementById("tab-relacja-btn").className="tab-dodaj"+(t==="relacja"?" active":"");}'
+            'function pokazTab(t){document.getElementById("tab-film").style.display=t==="film"?"block":"none";document.getElementById("tab-relacja").style.display=t==="relacja"?"block":"none";document.getElementById("tab-film-btn").className="tab-dodaj"+(t==="film"?" active":"");document.getElementById("tab-relacja-btn").className="tab-dodaj"+(t==="relacja"?" active":"");}'
             'if(location.hash==="#relacja")pokazTab("relacja");'
             '</script>'
             + bottom_nav_html('dodaj', session['uzytkownik']) + '</body></html>')
@@ -739,10 +741,7 @@ def dodaj_relacje():
     img.thumbnail((1080, 1920))
     nazwa = session['uzytkownik'] + '_' + str(random.randint(100000, 999999)) + '.jpg'
     img.save(os.path.join(RELACJE_FOLDER, nazwa), 'JPEG')
-    if czas == 0:
-        wygasa = None
-    else:
-        wygasa = (datetime.now() + timedelta(days=czas)).isoformat()
+    wygasa = None if czas == 0 else (datetime.now() + timedelta(days=czas)).isoformat()
     conn = get_db()
     conn.execute("INSERT INTO relacje (autor, plik, opis, widocznosc, wygasa) VALUES (?,?,?,?,?)",
                  (session['uzytkownik'], nazwa, opis, widocznosc, wygasa))
@@ -788,11 +787,11 @@ def wiadomosci():
     for p in prosby:
         prosby_html += ('<div class="prosba-card">'
             '<div style="display:flex;align-items:center;gap:10px;">' + avatar_html(p['od'], 'sm') +
-            '<div><b>@' + p['od'] + '</b> chce wysłać Ci wiadomość</div></div>'
+            '<div><b>@' + p['od'] + '</b> chce wyslac Ci wiadomosc</div></div>'
             '<p class="prosba-msg">' + p['wiadomosc'] + '</p>'
             '<div class="prosba-btns">'
             '<button class="akceptuj-btn" onclick="odpowiedzProsbie(' + str(p['id']) + ',\'zaakceptowana\')">Akceptuj</button>'
-            '<button class="odrzuc-btn" onclick="odpowiedzProsbie(' + str(p['id']) + ',\'odrzucona\')">Odrzuć</button>'
+            '<button class="odrzuc-btn" onclick="odpowiedzProsbie(' + str(p['id']) + ',\'odrzucona\')">Odrzuc</button>'
             '</div></div>')
     rozm = conn.execute(
         "SELECT CASE WHEN od=? THEN do ELSE od END as rozmowca, MAX(data) as ostatnia, MAX(id) as last_id "
@@ -803,7 +802,7 @@ def wiadomosci():
         ost = conn.execute("SELECT * FROM wiadomosci WHERE id=?", (r['last_id'],)).fetchone()
         nieprzeczytane = conn.execute("SELECT COUNT(*) as c FROM wiadomosci WHERE od=? AND do=? AND przeczytana=0",
                                       (r['rozmowca'], uzytkownik)).fetchone()['c']
-        if ost['typ'] == 'zdjecie': preview = '📷 Zdjęcie'
+        if ost['typ'] == 'zdjecie': preview = 'Zdjecie'
         else: preview = (ost['tresc'] or '')[:40]
         rozm_html += ('<a href="/chat/' + r['rozmowca'] + '" class="chat-row ' + ('unread' if nieprzeczytane else '') + '">'
             + avatar_html(r['rozmowca'], 'sm') +
@@ -811,12 +810,12 @@ def wiadomosci():
             '<p class="chat-row-preview ' + ('unread-text' if nieprzeczytane else '') + '">' + preview + '</p></div>'
             '<span class="chat-row-time">' + (ost['data'][11:16] if ost else '') + '</span></a>')
     conn.close()
-    return ('<!DOCTYPE html><html><head><title>Wiadomości - OlivoVid</title>'
+    return ('<!DOCTYPE html><html><head><title>Wiadomosci - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
-            '<div class="chat-page"><div class="chat-list"><h2>Wiadomości</h2>'
-            + (('<div style="margin-bottom:16px;"><p style="color:#aaa;font-size:13px;margin-bottom:8px;">Prośby o wiadomość</p>' + prosby_html + '</div>') if prosby_html else '')
-            + (rozm_html if rozm_html else '<p style="color:#555;text-align:center;padding:40px;">Brak wiadomości</p>')
+            '<div class="chat-page"><div class="chat-list"><h2>Wiadomosci</h2>'
+            + (('<div style="margin-bottom:16px;"><p style="color:#aaa;font-size:13px;margin-bottom:8px;">Prosby o wiadomosc</p>' + prosby_html + '</div>') if prosby_html else '')
+            + (rozm_html if rozm_html else '<p style="color:#555;text-align:center;padding:40px;">Brak wiadomosci</p>')
             + '</div></div>'
             + bottom_nav_html('wiad', uzytkownik) +
             '<script>function odpowiedzProsbie(id,status){fetch("/odpowiedz_prosbie/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:status})}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}</script>'
@@ -852,12 +851,12 @@ def wyslij_prosbe(do):
     data = request.get_json()
     wiadomosc = data.get('wiadomosc', '').strip()
     if not wiadomosc or not do:
-        return jsonify({'error': 'Napisz wiadomość'}), 400
+        return jsonify({'error': 'Napisz wiadomosc'}), 400
     conn = get_db()
     istniejaca = conn.execute("SELECT * FROM prosby_chat WHERE od=? AND do=?", (session['uzytkownik'], do)).fetchone()
     if istniejaca:
         conn.close()
-        return jsonify({'error': 'Prośba już wysłana'}), 400
+        return jsonify({'error': 'Prosba juz wyslana'}), 400
     conn.execute("INSERT INTO prosby_chat (od, do, wiadomosc) VALUES (?,?,?)", (session['uzytkownik'], do, wiadomosc))
     conn.execute("INSERT INTO powiadomienia (dla, od, typ, film_id) VALUES (?,?,'prosba_chat',0)", (do, session['uzytkownik']))
     conn.commit()
@@ -878,17 +877,17 @@ def chat(rozmowca):
             return ('<!DOCTYPE html><html><head><title>Chat</title><meta name="viewport" content="width=device-width, initial-scale=1">'
                     + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
                     '<div class="upload-page"><div style="max-width:500px;margin:40px auto;padding:0 16px;text-align:center;">'
-                    '<p style="color:#aaa;font-size:16px;">Prośba wysłana do @' + rozmowca + '</p>'
-                    '<p style="color:#555;font-size:14px;margin-top:8px;">Poczekaj aż zaakceptuje</p>'
-                    '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#fe2c55;">← Wróć</a>'
+                    '<p style="color:#aaa;font-size:16px;">Prosba wyslana do @' + rozmowca + '</p>'
+                    '<p style="color:#555;font-size:14px;margin-top:8px;">Poczekaj az zaakceptuje</p>'
+                    '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#9b59b6;text-decoration:none;">Wróć</a>'
                     '</div></div>' + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
         elif prosba and prosba['status'] == 'odrzucona':
             conn.close()
             return ('<!DOCTYPE html><html><head><title>Chat</title><meta name="viewport" content="width=device-width, initial-scale=1">'
                     + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
                     '<div class="upload-page"><div style="max-width:500px;margin:40px auto;padding:0 16px;text-align:center;">'
-                    '<p style="color:#fe2c55;font-size:16px;">@' + rozmowca + ' odrzucił Twoją prośbę</p>'
-                    '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#fe2c55;">← Wróć</a>'
+                    '<p style="color:#9b59b6;font-size:16px;">@' + rozmowca + ' odrzucil Twoja prosbe</p>'
+                    '<a href="/wiadomosci" style="display:inline-block;margin-top:20px;color:#9b59b6;text-decoration:none;">Wróć</a>'
                     '</div></div>' + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
         else:
             conn.close()
@@ -896,13 +895,13 @@ def chat(rozmowca):
                     + STYLE + '</head><body>' + top_nav_html(uzytkownik) +
                     '<div class="upload-page"><div class="prosba-send-box">'
                     '<h2>Napisz do @' + rozmowca + '</h2>'
-                    '<p style="color:#888;font-size:13px;margin-bottom:10px;">Wyślij prośbę — @' + rozmowca + ' musi ją zaakceptować</p>'
-                    '<textarea id="prosba-msg" placeholder="Napisz pierwszą wiadomość..."></textarea>'
-                    '<button class="prosba-send-btn" onclick="wyslijProsbe()">Wyślij prośbę</button>'
+                    '<p style="color:#888;font-size:13px;margin-bottom:10px;">Wyslij prosbe — @' + rozmowca + ' musi ja zaakceptowac</p>'
+                    '<textarea id="prosba-msg" placeholder="Napisz pierwsza wiadomosc..."></textarea>'
+                    '<button class="prosba-send-btn" onclick="wyslijProsbe()">Wyslij prosbe</button>'
                     '</div></div>'
                     '<script>function wyslijProsbe(){const msg=document.getElementById("prosba-msg").value.trim();if(!msg)return;'
                     'fetch("/wyslij_prosbe/' + rozmowca + '",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({wiadomosc:msg})})'
-                    '.then(r=>r.json()).then(d=>{if(d.ok)location.reload();else alert(d.error||"Błąd");});}</script>'
+                    '.then(r=>r.json()).then(d=>{if(d.ok)location.reload();else alert(d.error||"Blad");});}</script>'
                     + bottom_nav_html('wiad', uzytkownik) + '</body></html>')
     wiad = conn.execute(
         "SELECT * FROM wiadomosci WHERE (od=? AND do=?) OR (od=? AND do=?) ORDER BY data ASC",
@@ -916,7 +915,7 @@ def chat(rozmowca):
         jest_moja = w['od'] == uzytkownik
         klasa = "sent" if jest_moja else "received"
         if w['typ'] == 'zdjecie':
-            tresc_html = '<img src="/chat_img/' + w['tresc'] + '" alt="zdjęcie">'
+            tresc_html = '<img src="/chat_img/' + w['tresc'] + '" alt="zdjecie">'
         else:
             tresc_html = w['tresc']
         reakcja_html = ''
@@ -924,19 +923,22 @@ def chat(rozmowca):
             rk = '' if jest_moja else 'left'
             reakcja_html = '<span class="msg-reakcja ' + rk + '">' + w['reakcja'] + '</span>'
         elif not jest_moja:
-            reakcja_html = '<span class="msg-reakcja left" onclick="pokazPicker(' + str(w['id']) + ')">＋</span>'
+            reakcja_html = '<span class="msg-reakcja left" onclick="pokazPicker(' + str(w['id']) + ')">+</span>'
         msgs_html += ('<div class="msg-bubble ' + klasa + '" id="msg-' + str(w['id']) + '">'
             + tresc_html + '<div class="msg-time">' + w['data'][11:16] + '</div>' + reakcja_html + '</div>')
         last_id = max(last_id, w['id'])
+    back_svg = '<svg viewBox="0 0 24 24"><path fill="white" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>'
+    send_svg = '<svg viewBox="0 0 24 24"><path fill="white" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>'
+    img_btn_svg = '<svg viewBox="0 0 24 24"><path fill="white" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'
     return ('<!DOCTYPE html><html><head><title>@' + rozmowca + '</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>'
             '<div class="conv-page">'
             '<div class="conv-header">'
-            '<a href="/wiadomosci" class="conv-back"><svg viewBox="0 0 24 24"><path fill="white" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>'
+            '<a href="/wiadomosci" class="conv-back">' + back_svg + '</a>'
             + avatar_html(rozmowca, 'sm') +
             '<p class="conv-header-name">@' + rozmowca + '</p>'
-            '<a href="/profil/' + rozmowca + '" style="margin-left:auto;color:#aaa;font-size:13px;">Profil</a>'
+            '<a href="/profil/' + rozmowca + '" style="margin-left:auto;color:#aaa;font-size:13px;text-decoration:none;">Profil</a>'
             '</div>'
             '<div class="conv-messages" id="msgs">' + msgs_html + '</div>'
             '<div class="reakcja-picker" id="picker">'
@@ -947,14 +949,11 @@ def chat(rozmowca):
             '<span class="reakcja-opt" onclick="dajReakcje(currentMsgId,\'👏\')">👏</span>'
             '</div>'
             '<div class="conv-input-bar">'
-            '<label class="conv-img-btn" for="img-input">'
-            '<svg viewBox="0 0 24 24"><path fill="white" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'
-            '</label>'
+            '<label class="conv-img-btn" for="img-input">' + img_btn_svg + '</label>'
             '<input type="file" id="img-input" accept="image/*" style="display:none" onchange="wyslijZdjecie(this)">'
-            '<input type="text" class="conv-input" id="msg-input" placeholder="Napisz wiadomość..." onkeydown="if(event.key===\'Enter\')wyslijWiad()">'
-            '<button class="conv-send-btn" onclick="wyslijWiad()">'
-            '<svg viewBox="0 0 24 24"><path fill="white" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>'
-            '</button></div></div>'
+            '<input type="text" class="conv-input" id="msg-input" placeholder="Napisz wiadomosc..." onkeydown="if(event.key===\'Enter\')wyslijWiad()">'
+            '<button class="conv-send-btn" onclick="wyslijWiad()">' + send_svg + '</button>'
+            '</div></div>'
             '<script>'
             'const rozmowca="' + rozmowca + '";'
             'let lastId=' + str(last_id) + ';'
@@ -973,7 +972,7 @@ def chat(rozmowca):
             'if(typing&&!tInd){msgs.insertAdjacentHTML("beforeend","<div id=\'typing-ind\' class=\'msg-bubble received\' style=\'padding:10px 16px;\'><span class=\'typing-dots\'><span></span><span></span><span></span></span></div>");msgs.scrollTop=msgs.scrollHeight;}'
             'else if(!typing&&tInd)tInd.remove();'
             'd.wiad.forEach(w=>{if(!document.getElementById("msg-"+w.id)){let t=w.typ==="zdjecie"?"<img src=\'/chat_img/"+w.tresc+"\' style=\'max-width:200px;border-radius:12px;\'>":w.tresc;'
-            'msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble received\' id=\'msg-"+w.id+"\'><span>"+t+"</span><div class=\'msg-time\'>"+w.data.slice(11,16)+"</div><span class=\'msg-reakcja left\' onclick=\'pokazPicker("+w.id+")\'>＋</span></div>");'
+            'msgs.insertAdjacentHTML("beforeend","<div class=\'msg-bubble received\' id=\'msg-"+w.id+"\'><span>"+t+"</span><div class=\'msg-time\'>"+w.data.slice(11,16)+"</div></div>");'
             'msgs.scrollTop=msgs.scrollHeight;lastId=Math.max(lastId,w.id);}});});}'
             'setInterval(pollChat,2000);'
             'document.getElementById("msg-input").addEventListener("input",function(){fetch("/pisze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({do:rozmowca,pisze:this.value.length>0});});});'
@@ -1084,8 +1083,8 @@ def profil(nazwa):
         conn.close()
         return ('<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">'
                 + STYLE + '</head><body>' + top_nav_html(session['uzytkownik'])
-                + '<p style="color:white;text-align:center;padding:40px;">Użytkownik nie istnieje</p>'
-                + bottom_nav_html('profil', session['uzytkownik']) + '</body></html>')
+                + '<p style="color:white;text-align:center;padding:40px;">Uzytkownik nie istnieje</p>'
+                + bottom_nav_html('', session['uzytkownik']) + '</body></html>')
     filmy = conn.execute("SELECT * FROM filmy WHERE autor=? ORDER BY data DESC", (nazwa,)).fetchall()
     reposty_raw = conn.execute(
         "SELECT f.* FROM filmy f JOIN reposty r ON f.id=r.film_id WHERE r.uzytkownik=? ORDER BY r.data DESC",
@@ -1103,7 +1102,7 @@ def profil(nazwa):
         fid = str(film['id'])
         if jest_swoj and not is_repost:
             usun = ('<button class="grid-delete" onclick="usunSwojFilm(event,' + fid + ')">'
-                    '<svg viewBox="0 0 24 24"><path fill="#fe2c55" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>')
+                    '<svg viewBox="0 0 24 24"><path fill="#9b59b6" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>')
         else:
             usun = ''
         badge = '<span class="repost-badge">RP</span>' if is_repost else ''
@@ -1120,8 +1119,9 @@ def profil(nazwa):
     else:
         obs_class = "follow-btn following" if obserwuje else "follow-btn"
         obs_text = "Obserwujesz" if obserwuje else "Obserwuj"
+        msg_svg_btn = '<svg width="16" height="16" viewBox="0 0 24 24"><path fill="white" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>'
         follow_btn = ('<button class="' + obs_class + '" id="follow-btn" onclick="toggleObserwuj(\'' + nazwa + '\')">' + obs_text + '</button>'
-                      + '<a href="/chat/' + nazwa + '" class="msg-btn"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="white" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>Napisz</a>')
+                      + '<a href="/chat/' + nazwa + '" class="msg-btn">' + msg_svg_btn + 'Napisz</a>')
 
     aktywna_nav = 'profil' if jest_swoj else ''
     return ('<!DOCTYPE html><html><head><title>@' + nazwa + ' - OlivoVid</title>'
@@ -1132,24 +1132,24 @@ def profil(nazwa):
             '<div><p class="profile-name">@' + nazwa + '</p>'
             '<p class="profile-bio">' + (user['bio'] or 'Brak opisu') + '</p>'
             '<div class="profile-stats">'
-            '<div class="stat"><p class="stat-num">' + str(len(filmy)) + '</p><p class="stat-label">filmów</p></div>'
-            '<div class="stat"><p class="stat-num">' + str(ile_lajkow) + '</p><p class="stat-label">lajków</p></div>'
-            '<div class="stat"><p class="stat-num" id="obserwujacych-count">' + str(obserwujacych) + '</p><p class="stat-label">obserwujących</p></div>'
+            '<div class="stat"><p class="stat-num">' + str(len(filmy)) + '</p><p class="stat-label">filmow</p></div>'
+            '<div class="stat"><p class="stat-num">' + str(ile_lajkow) + '</p><p class="stat-label">lajkow</p></div>'
+            '<div class="stat"><p class="stat-num" id="obserwujacych-count">' + str(obserwujacych) + '</p><p class="stat-label">obserwujacych</p></div>'
             '</div>' + follow_btn + '</div></div></div>'
             '<div class="profile-tabs">'
             '<div class="profile-tab active" onclick="pokazTab(\'filmy\',this)">Filmy</div>'
             '<div class="profile-tab" onclick="pokazTab(\'reposty\',this)">Reposty</div>'
             '</div>'
             '<div id="tab-filmy" class="profile-grid">'
-            + (filmy_html or '<p style="color:#555;text-align:center;padding:40px;grid-column:1/-1;">Brak filmów</p>') +
+            + (filmy_html or '<p style="color:#555;text-align:center;padding:40px;grid-column:1/-1;">Brak filmow</p>') +
             '</div><div id="tab-reposty" class="profile-grid" style="display:none;">'
-            + (reposty_html or '<p style="color:#555;text-align:center;padding:40px;grid-column:1/-1;">Brak repostów</p>') +
+            + (reposty_html or '<p style="color:#555;text-align:center;padding:40px;grid-column:1/-1;">Brak repostow</p>') +
             '</div></div>'
             + bottom_nav_html(aktywna_nav, session['uzytkownik']) +
             '<script>'
             'function pokazTab(tab,el){document.getElementById("tab-filmy").style.display=tab==="filmy"?"grid":"none";document.getElementById("tab-reposty").style.display=tab==="reposty"?"grid":"none";document.querySelectorAll(".profile-tab").forEach(t=>t.classList.remove("active"));el.classList.add("active");}'
             'function toggleObserwuj(nazwa){fetch("/obserwuj/"+nazwa,{method:"POST"}).then(r=>r.json()).then(d=>{const btn=document.getElementById("follow-btn");btn.textContent=d.obserwuje?"Obserwujesz":"Obserwuj";btn.className="follow-btn"+(d.obserwuje?" following":"");document.getElementById("obserwujacych-count").textContent=d.obserwujacych;});}'
-            'function usunSwojFilm(e,fid){e.stopPropagation();e.preventDefault();if(!confirm("Usunąć ten film?"))return;fetch("/usun_film/"+fid,{method:"POST"}).then(r=>r.json()).then(d=>{if(d.ok)document.getElementById("film-"+fid).remove();});}'
+            'function usunSwojFilm(e,fid){e.stopPropagation();e.preventDefault();if(!confirm("Usunac ten film?"))return;fetch("/usun_film/"+fid,{method:"POST"}).then(r=>r.json()).then(d=>{if(d.ok)document.getElementById("film-"+fid).remove();});}'
             '</script></body></html>')
 
 @app.route("/szukaj")
@@ -1169,13 +1169,13 @@ def szukaj():
                 '<div class="user-info"><p class="user-name">@' + u['nazwa'] + '</p><p class="user-bio">' + (u['bio'] or 'Brak opisu') + '</p></div></a>')
         for film in filmy:
             filmy_html += ('<a href="/ogladaj/' + str(film['id']) + '" class="video-row">'
-                '<div class="video-thumb"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#fe2c55" d="M8 5v14l11-7z"/></svg></div>'
+                '<div class="video-thumb"><svg width="24" height="24" viewBox="0 0 24 24"><path fill="#9b59b6" d="M8 5v14l11-7z"/></svg></div>'
                 '<div><p class="video-row-title">' + film['tytul'] + '</p><p class="video-row-author">@' + film['autor'] + '</p></div></a>')
     wyniki = ""
     if query:
-        if uzytkownicy_html: wyniki += '<h3>Użytkownicy</h3>' + uzytkownicy_html
+        if uzytkownicy_html: wyniki += '<h3>Uzytkownicy</h3>' + uzytkownicy_html
         if filmy_html: wyniki += '<h3>Filmy</h3>' + filmy_html
-        if not wyniki: wyniki = '<p style="color:#555;text-align:center;padding:40px;">Brak wyników</p>'
+        if not wyniki: wyniki = '<p style="color:#555;text-align:center;padding:40px;">Brak wynikow</p>'
     else:
         wyniki = '<p style="color:#555;text-align:center;padding:40px;">Wpisz czego szukasz</p>'
     return ('<!DOCTYPE html><html><head><title>Szukaj - OlivoVid</title>'
@@ -1222,12 +1222,12 @@ def powiadomienia():
     conn.close()
     notifs_html = ""
     for n in notifs:
-        if n['typ'] == 'lajk': tekst = '<b>@' + n['od'] + '</b> polubił Twoje wideo'
-        elif n['typ'] == 'komentarz': tekst = '<b>@' + n['od'] + '</b> skomentował Twoje wideo'
-        elif n['typ'] == 'obserwowanie': tekst = '<b>@' + n['od'] + '</b> zaczął Cię obserwować'
-        elif n['typ'] == 'wiadomosc': tekst = '<b>@' + n['od'] + '</b> wysłał Ci wiadomość'
-        elif n['typ'] == 'prosba_chat': tekst = '<b>@' + n['od'] + '</b> chce Ci wysłać wiadomość'
-        elif n['typ'] == 'chat_zaakceptowany': tekst = '<b>@' + n['od'] + '</b> zaakceptował Twoją prośbę'
+        if n['typ'] == 'lajk': tekst = '<b>@' + n['od'] + '</b> polubil Twoje wideo'
+        elif n['typ'] == 'komentarz': tekst = '<b>@' + n['od'] + '</b> skomentowal Twoje wideo'
+        elif n['typ'] == 'obserwowanie': tekst = '<b>@' + n['od'] + '</b> zaczal Cie obserwowac'
+        elif n['typ'] == 'wiadomosc': tekst = '<b>@' + n['od'] + '</b> wyslal Ci wiadomosc'
+        elif n['typ'] == 'prosba_chat': tekst = '<b>@' + n['od'] + '</b> chce Ci wyslac wiadomosc'
+        elif n['typ'] == 'chat_zaakceptowany': tekst = '<b>@' + n['od'] + '</b> zaakceptowal Twoja prosbe'
         else: tekst = '<b>@' + n['od'] + '</b> zareagował'
         notifs_html += ('<div class="notif-item ' + ('unread' if not n['przeczytane'] else '') + '">'
             + avatar_html(n['od'], 'sm') +
@@ -1236,7 +1236,7 @@ def powiadomienia():
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="notif-page"><div class="notif-list"><h2>Powiadomienia</h2>'
-            + (notifs_html or '<p style="color:#555;text-align:center;padding:40px;">Brak powiadomień</p>')
+            + (notifs_html or '<p style="color:#555;text-align:center;padding:40px;">Brak powiadomien</p>')
             + '</div></div>'
             + bottom_nav_html('', session['uzytkownik']) + '</body></html>')
 
@@ -1254,7 +1254,7 @@ def upload():
     tytul = request.form["tytul"]
     plik.seek(0, 2)
     if plik.tell() > 50 * 1024 * 1024:
-        return "<h1 style='color:white;text-align:center;padding:40px;'>Plik za duży! Max 50MB.</h1>"
+        return "<h1 style='color:white;text-align:center;padding:40px;'>Plik za duzy! Max 50MB.</h1>"
     plik.seek(0)
     wynik = cloudinary.uploader.upload(plik, resource_type="video", folder="olivovid")
     conn = get_db()
@@ -1295,21 +1295,21 @@ def admin():
     filmy_html = ""
     for film in filmy:
         filmy_html += ('<div class="film-row"><div><p style="font-weight:700;">' + film['tytul'] + '</p>'
-            '<p style="color:#888;font-size:13px;">@' + film['autor'] + ' • ' + film['data'][:10] + '</p></div>'
-            '<button class="delete-btn" onclick="usunFilm(' + str(film['id']) + ')">Usuń</button></div>')
+            '<p style="color:#888;font-size:13px;">@' + film['autor'] + ' - ' + film['data'][:10] + '</p></div>'
+            '<button class="delete-btn" onclick="usunFilm(' + str(film['id']) + ')">Usun</button></div>')
     return ('<!DOCTYPE html><html><head><title>Admin - OlivoVid</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="admin-page"><div class="admin-panel"><h2>Panel Admina</h2>'
-            '<div class="admin-card"><h3>Wgrywanie filmów</h3>'
+            '<div class="admin-card"><h3>Wgrywanie filmow</h3>'
             '<button class="toggle-btn ' + ('toggle-on' if aktywne else 'toggle-off') + '" onclick="toggleWgrywanie()" id="toggleBtn">'
-            + ('Włączone' if aktywne else 'Wyłączone') + '</button></div>'
+            + ('Wlaczone' if aktywne else 'Wylaczone') + '</button></div>'
             '<div class="admin-card"><h3>Wszystkie filmy (' + str(len(filmy)) + ')</h3>'
-            + (filmy_html or '<p style="color:#555;">Brak filmów</p>') + '</div></div></div>'
+            + (filmy_html or '<p style="color:#555;">Brak filmow</p>') + '</div></div></div>'
             + bottom_nav_html('', session['uzytkownik']) +
             '<script>'
-            'function toggleWgrywanie(){fetch("/admin/toggle_wgrywanie",{method:"POST"}).then(r=>r.json()).then(d=>{const b=document.getElementById("toggleBtn");b.textContent=d.aktywne?"Włączone":"Wyłączone";b.className="toggle-btn "+(d.aktywne?"toggle-on":"toggle-off");});}'
-            'function usunFilm(fid){if(!confirm("Usunąć ten film?"))return;fetch("/admin/usun_film/"+fid,{method:"POST"}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}'
+            'function toggleWgrywanie(){fetch("/admin/toggle_wgrywanie",{method:"POST"}).then(r=>r.json()).then(d=>{const b=document.getElementById("toggleBtn");b.textContent=d.aktywne?"Wlaczone":"Wylaczone";b.className="toggle-btn "+(d.aktywne?"toggle-on":"toggle-off");});}'
+            'function usunFilm(fid){if(!confirm("Usunac ten film?"))return;fetch("/admin/usun_film/"+fid,{method:"POST"}).then(r=>r.json()).then(d=>{if(d.ok)location.reload();});}'
             '</script></body></html>')
 
 @app.route("/admin/toggle_wgrywanie", methods=["POST"])
@@ -1424,10 +1424,10 @@ def edytuj_profil():
             + STYLE + '</head><body>' + top_nav_html(session['uzytkownik']) +
             '<div class="upload-page"><div style="max-width:500px;margin:20px auto;padding:0 16px;">'
             '<div class="edit-form"><h2>Edytuj profil</h2><form method="POST" enctype="multipart/form-data">'
-            '<label>Zdjęcie profilowe</label><br><br>' + avatar_html(session['uzytkownik'], 'lg') +
+            '<label>Zdjecie profilowe</label><br><br>' + avatar_html(session['uzytkownik'], 'lg') +
             '<br><br><input type="file" name="avatar" accept="image/*" style="color:white;margin-bottom:14px;">'
-            '<label>Bio (max 150 znaków)</label>'
-            '<textarea name="bio" placeholder="Napisz coś o sobie...">' + (user['bio'] or '') + '</textarea>'
+            '<label>Bio (max 150 znakow)</label>'
+            '<textarea name="bio" placeholder="Napisz cos o sobie...">' + (user['bio'] or '') + '</textarea>'
             '<button type="submit" class="save-btn">Zapisz</button>'
             '</form></div></div></div>'
             + bottom_nav_html('profil', session['uzytkownik']) + '</body></html>')
@@ -1439,7 +1439,7 @@ def avatar(nazwa):
 @app.route("/setup_admin/<klucz>/<nazwa>")
 def setup_admin(klucz, nazwa):
     if klucz != "olivovid_tajny_klucz_2026":
-        return "Błędny klucz", 403
+        return "Bledny klucz", 403
     conn = get_db()
     conn.execute("UPDATE uzytkownicy SET is_admin=1 WHERE nazwa=?", (nazwa,))
     conn.commit()
@@ -1458,17 +1458,17 @@ def logowanie():
         if wynik and check_password_hash(wynik['haslo'], haslo):
             session['uzytkownik'] = nazwa
             return redirect(url_for('strona_glowna'))
-        error = "Błędny login lub hasło!"
+        error = "Bledny login lub haslo!"
     err_html = "<p class='error'>" + error + "</p>" if error else ""
     return ('<!DOCTYPE html><html><head><title>OlivoVid - Logowanie</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body><div class="center"><div class="card">'
             '<div style="text-align:center;margin-bottom:8px;" class="logo">Olivo<span>Vid</span></div>'
-            '<h2>Zaloguj się</h2><form method="POST">'
-            '<input type="text" name="nazwa" placeholder="Nazwa użytkownika" required>'
-            '<input type="password" name="haslo" placeholder="Hasło" required>'
-            + err_html + '<button type="submit" class="btn">Zaloguj się</button></form><hr class="divider">'
-            '<p class="sub">Nie masz konta? <a href="/rejestracja" class="link">Zarejestruj się</a></p>'
+            '<h2>Zaloguj sie</h2><form method="POST">'
+            '<input type="text" name="nazwa" placeholder="Nazwa uzytkownika" required>'
+            '<input type="password" name="haslo" placeholder="Haslo" required>'
+            + err_html + '<button type="submit" class="btn">Zaloguj sie</button></form><hr class="divider">'
+            '<p class="sub">Nie masz konta? <a href="/rejestracja" class="link">Zarejestruj sie</a></p>'
             '</div></div></body></html>')
 
 @app.route("/rejestracja", methods=["GET", "POST"])
@@ -1478,7 +1478,7 @@ def rejestracja():
         nazwa = request.form["nazwa"]
         haslo_raw = request.form["haslo"]
         if not nazwa or not haslo_raw:
-            error = "Wypełnij wszystkie pola!"
+            error = "Wypelnij wszystkie pola!"
         else:
             haslo = generate_password_hash(haslo_raw)
             conn = get_db()
@@ -1490,17 +1490,17 @@ def rejestracja():
                 return redirect(url_for('strona_glowna'))
             except:
                 conn.close()
-                error = "Ta nazwa użytkownika jest zajęta!"
+                error = "Ta nazwa uzytkownika jest zajeta!"
     err_html = "<p class='error'>" + error + "</p>" if error else ""
     return ('<!DOCTYPE html><html><head><title>OlivoVid - Rejestracja</title>'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             + STYLE + '</head><body><div class="center"><div class="card">'
             '<div style="text-align:center;margin-bottom:8px;" class="logo">Olivo<span>Vid</span></div>'
-            '<h2>Utwórz konto</h2><form method="POST">'
-            '<input type="text" name="nazwa" placeholder="Nazwa użytkownika" required>'
-            '<input type="password" name="haslo" placeholder="Hasło" required>'
-            + err_html + '<button type="submit" class="btn">Zarejestruj się</button></form><hr class="divider">'
-            '<p class="sub">Masz już konto? <a href="/logowanie" class="link">Zaloguj się</a></p>'
+            '<h2>Utworz konto</h2><form method="POST">'
+            '<input type="text" name="nazwa" placeholder="Nazwa uzytkownika" required>'
+            '<input type="password" name="haslo" placeholder="Haslo" required>'
+            + err_html + '<button type="submit" class="btn">Zarejestruj sie</button></form><hr class="divider">'
+            '<p class="sub">Masz juz konto? <a href="/logowanie" class="link">Zaloguj sie</a></p>'
             '</div></div></body></html>')
 
 @app.route("/wyloguj")
